@@ -247,10 +247,14 @@
             <div class="glass-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">상세 수집 데이터 목록</h2>
-                    <button id="copyExcelBtn" class="copy-btn"
-                        style="border:none; cursor:pointer; font-family:inherit;">
-                        데이터 복사하기 📋
-                    </button>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <input type="text" id="searchInput" placeholder="🏢 업체명 검색..."
+                            style="padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width: 220px; font-size: 0.95rem; outline: none;">
+                        <button id="copyExcelBtn" class="copy-btn"
+                            style="border:none; cursor:pointer; font-family:inherit;">
+                            현재 데이터 복사 📋
+                        </button>
+                    </div>
                 </div>
                 <div class="table-responsive">
                     <table id="dataTable">
@@ -291,24 +295,58 @@
                                 return;
                             }
 
+                            let filteredData = [...data];
+
+                            // Attach event listener for the Search Input
+                            const searchInput = document.getElementById("searchInput");
+                            if (searchInput) {
+                                searchInput.addEventListener("input", function () {
+                                    const searchTerm = this.value.toLowerCase().trim();
+                                    const rows = document.querySelectorAll("#tableBody tr");
+                                    const headers = Object.keys(data[0]);
+                                    const companyColIndex = headers.indexOf("업체명");
+
+                                    filteredData = data.filter(row => {
+                                        if (row["업체명"]) {
+                                            return row["업체명"].toLowerCase().includes(searchTerm);
+                                        }
+                                        return false;
+                                    });
+
+                                    rows.forEach(row => {
+                                        if (companyColIndex !== -1) {
+                                            const companyCell = row.cells[companyColIndex];
+                                            if (companyCell) {
+                                                const companyName = companyCell.textContent.toLowerCase();
+                                                if (companyName.includes(searchTerm)) {
+                                                    row.style.display = ""; // Show
+                                                } else {
+                                                    row.style.display = "none"; // Hide
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
                             // Attach event listener for the Copy button
                             const copyBtn = document.getElementById("copyExcelBtn");
                             if (copyBtn) {
                                 copyBtn.addEventListener("click", () => {
                                     copyBtn.textContent = "복사 중... ⏳";
-                                    // Use unparse with tab delimiter to make it Excel-compatible
-                                    const tsvText = Papa.unparse(data, { delimiter: "\t" });
+                                    // Use unparse with tab delimiter to make it Excel-compatible using only filtered data
+                                    const tsvText = Papa.unparse(filteredData, { delimiter: "\t" });
 
                                     // Write directly to clipboard
                                     navigator.clipboard.writeText(tsvText).then(() => {
                                         copyBtn.textContent = "복사 완료! ✅";
-                                        alert("클립보드에 데이터가 복사되었습니다!\n빈 엑셀(Excel) 문서 화면을 열고 [붙여넣기(Ctrl+V)] 하시면 표가 완벽하게 들어갑니다.");
-                                        setTimeout(() => { copyBtn.textContent = "데이터 복사하기 📋"; }, 3000);
+                                        alert("검색된 " + filteredData.length + "개의 데이터가 복사되었습니다!\n빈 엑셀 문서 화면을 열고 [붙여넣기(Ctrl+V)] 하시면 완벽하게 들어갑니다.");
+                                        setTimeout(() => { copyBtn.textContent = "현재 데이터 복사 📋"; }, 3000);
                                     }).catch(err => {
                                         console.error("복사실패", err);
                                         copyBtn.textContent = "복사 실패 ❌";
                                         alert("복사에 실패했습니다. 브라우저 설정을 확인하거나 수동으로 복사해주세요.");
-                                        setTimeout(() => { copyBtn.textContent = "데이터 복사하기 📋"; }, 3000);
+                                        setTimeout(() => { copyBtn.textContent = "현재 데이터 복사 📋"; }, 3000);
                                     });
                                 });
                             }
