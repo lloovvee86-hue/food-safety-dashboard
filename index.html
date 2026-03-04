@@ -278,13 +278,14 @@
             const loading = document.getElementById('loading');
             const dashboardContent = document.getElementById('dashboard-content');
 
-            // Calculate yesterday's date in KST
+            // Calculate today's date and time in KST
             const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-            kstDate.setDate(kstDate.getDate() - 1);
             const yyyy = kstDate.getFullYear();
             const mm = String(kstDate.getMonth() + 1).padStart(2, '0');
             const dd = String(kstDate.getDate()).padStart(2, '0');
-            document.getElementById('searchDatePrefix').textContent = `기준일: ${yyyy}-${mm}-${dd}`;
+            const hh = String(kstDate.getHours()).padStart(2, '0');
+            const mn = String(kstDate.getMinutes()).padStart(2, '0');
+            document.getElementById('searchDatePrefix').textContent = `최근업데이트: ${yyyy}-${mm}-${dd} ${hh}:${mn}`;
 
             fetch(`food_data.csv?t=${new Date().getTime()}`)
                 .then(response => response.text())
