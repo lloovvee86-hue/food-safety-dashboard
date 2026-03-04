@@ -47,7 +47,17 @@ def scrape_korea_food_safety():
                     page.locator('a[val="50"]').click() # 50개 선택
                 
                 print("50 items list loaded. Waiting for DOM update...")
-                page.wait_for_timeout(3000) # 매우 중요: API 응답 후 화면에 표가 다시 그려질 때까지 대기
+                
+                # Check how many items we expect on the first page
+                expected_rows_on_page_1 = 50 if total_count >= 50 else total_count
+                
+                try:
+                    # 매직 넘버 대기 대신 확실한 DOM 상태 확인!
+                    page.wait_for_function(f'document.querySelectorAll("#tbl_prd_list tbody tr").length === {expected_rows_on_page_1}', timeout=15000)
+                except Exception as e:
+                    print(f"Warning: waiting for {expected_rows_on_page_1} rows timed out, continuing...", e)
+                    
+                page.wait_for_timeout(1000) # 추가 안정성 대기
                 
             except Exception as e:
                 print(f"Error initiating search for {keyword}: {e}")
