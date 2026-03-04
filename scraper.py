@@ -51,13 +51,15 @@ def scrape_korea_food_safety():
                 # Check how many items we expect on the first page
                 expected_rows_on_page_1 = 50 if total_count >= 50 else total_count
                 
+                print(f"Waiting for precisely {expected_rows_on_page_1} rows to render...")
                 try:
-                    # 매직 넘버 대기 대신 확실한 DOM 상태 확인!
-                    page.wait_for_function(f'document.querySelectorAll("#tbl_prd_list tbody tr").length === {expected_rows_on_page_1}', timeout=15000)
+                    # 렌더링에 시간이 꽤 걸릴 수 있으므로 넉넉하게 45초 확보
+                    page.wait_for_function(f'document.querySelectorAll("#tbl_prd_list tbody tr").length === {expected_rows_on_page_1}', timeout=45000)
                 except Exception as e:
-                    print(f"Warning: waiting for {expected_rows_on_page_1} rows timed out, continuing...", e)
+                    print(f"Warning: waiting for {expected_rows_on_page_1} rows timed out, giving extra 10 seconds...", e)
+                    page.wait_for_timeout(10000) # 타임아웃 되더라도 최후의 10초 무조건 대기
                     
-                page.wait_for_timeout(1000) # 추가 안정성 대기
+                page.wait_for_timeout(2000) # 렌더링 후 안정화를 위한 2초 대기
                 
             except Exception as e:
                 print(f"Error initiating search for {keyword}: {e}")

@@ -234,9 +234,14 @@
             <div class="glass-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">검색어별 수집 통계</h2>
-                    <span id="searchDatePrefix"
-                        style="font-size: 0.95rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">기준일:
-                        로딩중</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span id="totalCountBadge"
+                            style="font-size: 0.95rem; font-weight: 600; color: #60a5fa; background: rgba(59, 130, 246, 0.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);">Total:
+                            0건</span>
+                        <span id="searchDatePrefix"
+                            style="font-size: 0.95rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">기준일:
+                            로딩중</span>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="keywordChart"></canvas>
@@ -293,6 +298,12 @@
                             if (data.length === 0) {
                                 loading.innerHTML = "데이터가 없습니다.";
                                 return;
+                            }
+
+                            // Update total count badge
+                            const totalBadge = document.getElementById("totalCountBadge");
+                            if (totalBadge) {
+                                totalBadge.textContent = "Total: " + data.length + "건";
                             }
 
                             let filteredData = [...data];
