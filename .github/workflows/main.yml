@@ -13,6 +13,10 @@ jobs:
   scrape_and_email:
     runs-on: ubuntu-latest
     
+    defaults:
+      run:
+        working-directory: Brand Data
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -33,9 +37,10 @@ jobs:
 
 
       - name: Commit and Push CSV changes
+        working-directory: .
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add food_data.csv
+          git add "Brand Data/food_data.csv"
           git commit -m "Auto-update food_data.csv via GitHub Actions" || echo "No changes to commit"
           git push

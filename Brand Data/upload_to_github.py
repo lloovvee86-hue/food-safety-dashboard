@@ -55,6 +55,7 @@ def upload_file(file_path, repo_path, commit_message):
         print(f"Failed to upload {repo_path}: {put_response.status_code} {put_response.text}")
 
 if __name__ == "__main__":
-    upload_file(r"d:\풀무원\Antigravity\index.html", "index.html", "[봇] 대시보드 날짜 인터페이스 최신화 업데이트 (수동적용)")
-    upload_file(r"d:\풀무원\Antigravity\food_data.csv", "food_data.csv", "[봇] 113건 최신 데이터 반영 (수동적용)")
+    upload_file(r"d:\풀무원\Antigravity\Brand Data\index.html", "Brand Data/index.html", "[봇] 대시보드 날짜 인터페이스 최신화 업데이트 (코다리 부장 🐟)")
+    upload_file(r"d:\풀무원\Antigravity\Brand Data\food_data.csv", "Brand Data/food_data.csv", "[봇] 스크래퍼 버그 수정 후 최신 데이터 반영 (코다리 부장 🐟)")
+    upload_file(r"d:\풀무원\Antigravity\Brand Data\scraper.py", "Brand Data/scraper.py", "[봇] 스크래퍼 로딩 및 타임아웃 오류 해결 (코다리 부장 🐟)")
     print("Done!")

@@ -14,20 +14,21 @@ def scrape_korea_food_safety():
 
         for keyword in keywords:
             print(f"Scraping for keyword: {keyword}")
-            page.goto("https://www.foodsafetykorea.go.kr/portal/specialinfo/searchInfoProduct.do?menu_grp=MENU_NEW04&menu_no=2815", wait_until="domcontentloaded")
+            page.goto("https://www.foodsafetykorea.go.kr/portal/specialinfo/searchInfoProduct.do?menu_grp=MENU_NEW04&menu_no=2815", wait_until="domcontentloaded", timeout=60000)
             page.wait_for_timeout(3000)
 
             try:
                 # 1. 검색어 입력 (제품명 입력란) - id가 prd_nm 임
                 search_input = page.locator('#prd_nm')
+                search_input.fill("") # Clear before filling, just in case
                 search_input.fill(keyword)
                 
                 # 2. 검색 버튼 클릭
-                with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=15000):
+                with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=45000):
                     page.locator('a#srchBtn').click()
                 
                 print("Waiting for initial results to load...")
-                page.wait_for_function('document.querySelector("#div_totCnt") && document.querySelector("#div_totCnt").innerText.includes("건이 검색되었습니다")', timeout=15000)
+                page.wait_for_function('document.querySelector("#div_totCnt") && document.querySelector("#div_totCnt").innerText.includes("건이 검색되었습니다")', timeout=45000)
                 
                 # 총 검색 건수 파악
                 total_count = 0
@@ -45,7 +46,7 @@ def scrape_korea_food_safety():
                 print("Changing to 50 items per page...")
                 page.locator('#a_list_cnt').click() # 드롭다운 열기
                 page.wait_for_timeout(500)
-                with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=15000):
+                with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=45000):
                     page.locator('a[val="50"]').click() # 50개 선택
                 
                 print("50 items list loaded. Waiting for DOM update...")
@@ -75,6 +76,13 @@ def scrape_korea_food_safety():
                 try:
                     # 각 페이지별로 스크린샷 캡처 (전체 화면)
                     screenshot_path = f"{keyword}_page{page_num}.png"
+                    
+                    # 로딩 중인지 확인 (번호 셀에 'loading' 텍스트가 사라질 때까지 대기)
+                    try:
+                        page.wait_for_function('!document.querySelector("#tbl_prd_list tbody tr td").innerText.toLowerCase().includes("loading")', timeout=45000)
+                    except Exception as e:
+                        print("Timeout waiting for 'loading...' to disappear, proceeding anyway.", e)
+                        
                     page.screenshot(path=screenshot_path, full_page=True)
                     print(f"Screenshot saved: {screenshot_path}")
 
@@ -118,7 +126,7 @@ def scrape_korea_food_safety():
                     # 현재 활성화된 다음 버튼이 있는지 확인
                     if next_btn.count() > 0 and next_btn.first.is_visible():
                         print(f"Moving to page {next_page_num}...")
-                        with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=15000):
+                        with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=45000):
                             next_btn.first.click()
                         page.wait_for_timeout(2000) # 버튼 클릭 후 렌더링 대기
                         page_num += 1
