@@ -270,6 +270,37 @@
                     </table>
                 </div>
             </div>
+
+            <!-- 변동 이력 Section -->
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">📋 변동 이력</h2>
+                    <span id="changeCountBadge"
+                        style="font-size: 0.95rem; font-weight: 600; color: #f59e0b; background: rgba(245, 158, 11, 0.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                        로딩중
+                    </span>
+                </div>
+                <div id="changeLogEmpty"
+                    style="display: none; text-align: center; color: var(--text-muted); padding: 30px;">
+                    아직 변동 이력이 없습니다. 스크래퍼가 다음에 실행되면 자동으로 기록됩니다.
+                </div>
+                <div class="table-responsive" id="changeLogTableWrap" style="display: none;">
+                    <table id="changeLogTable">
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th>변동유형</th>
+                                <th>검색어</th>
+                                <th>품목보고번호</th>
+                                <th>업체명</th>
+                                <th style="white-space:normal; word-break:keep-all; min-width:120px;">제품명</th>
+                                <th>품목유형</th>
+                            </tr>
+                        </thead>
+                        <tbody id="changeLogBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -515,6 +546,74 @@
                 .catch(err => {
                     console.error("Error loading CSV:", err);
                     loading.innerHTML = "데이터를 불러오는 중 오류가 발생했습니다.";
+                });
+
+            // 변동 이력 (changes_log.csv) 로드
+            fetch(`changes_log.csv?t=${new Date().getTime()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("changes_log.csv not found");
+                    return response.text();
+                })
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function (results) {
+                            const badge = document.getElementById("changeCountBadge");
+                            const emptyMsg = document.getElementById("changeLogEmpty");
+                            const tableWrap = document.getElementById("changeLogTableWrap");
+                            const tbody = document.getElementById("changeLogBody");
+
+                            if (results.data.length === 0) {
+                                badge.textContent = "0건";
+                                emptyMsg.style.display = "block";
+                                return;
+                            }
+
+                            badge.textContent = `총 ${results.data.length}건`;
+                            tableWrap.style.display = "block";
+
+                            // 최신순 정렬
+                            const sorted = results.data.reverse();
+
+                            sorted.forEach((row, index) => {
+                                let tr = document.createElement("tr");
+                                const isAdd = row["변동유형"] === "추가";
+                                tr.style.borderLeft = isAdd ? "3px solid #10b981" : "3px solid #ef4444";
+                                tr.style.backgroundColor = isAdd ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)";
+
+                                if (index < 30) {
+                                    tr.style.animation = `fadeInUp 0.3s ease-out forwards ${index * 0.02}s`;
+                                    tr.style.opacity = '0';
+                                }
+
+                                const headers = ["날짜", "변동유형", "검색어", "품목보고번호", "업체명", "제품명", "품목유형"];
+                                headers.forEach(h => {
+                                    let td = document.createElement("td");
+                                    if (h === "변동유형") {
+                                        td.textContent = isAdd ? "✅ 추가" : "❌ 삭제";
+                                        td.style.fontWeight = "600";
+                                        td.style.color = isAdd ? "#10b981" : "#ef4444";
+                                    } else {
+                                        td.textContent = row[h] || '-';
+                                    }
+                                    if (h === "제품명") {
+                                        td.style.whiteSpace = "normal";
+                                        td.style.wordBreak = "keep-all";
+                                    }
+                                    tr.appendChild(td);
+                                });
+                                tbody.appendChild(tr);
+                            });
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.log("변동 이력 없음 (정상):", err.message);
+                    const badge = document.getElementById("changeCountBadge");
+                    const emptyMsg = document.getElementById("changeLogEmpty");
+                    if (badge) badge.textContent = "0건";
+                    if (emptyMsg) emptyMsg.style.display = "block";
                 });
         });
     </script>

@@ -2,7 +2,83 @@ import csv
 import time
 import os
 import glob
+from datetime import datetime, timezone, timedelta
 from playwright.sync_api import sync_playwright
+
+
+def load_previous_data(filepath):
+    """이전 food_data.csv를 읽어서 set으로 반환 (품목보고번호 기준 비교)"""
+    previous = {}
+    if os.path.exists(filepath):
+        with open(filepath, "r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                key = row.get("품목보고번호", "")
+                if key:
+                    previous[key] = row
+    return previous
+
+
+def detect_changes(old_data, new_results, headers):
+    """이전 데이터와 새 데이터를 비교하여 추가/삭제 항목 탐지"""
+    new_data = {}
+    for row in new_results:
+        # row: [검색어, 번호, 품목보고번호, 업체명, 품목유형, 소비기한, 제품명, 분류]
+        row_dict = dict(zip(headers, row))
+        key = row_dict.get("품목보고번호", "")
+        if key:
+            new_data[key] = row_dict
+
+    added = []
+    removed = []
+
+    # 새로 추가된 항목
+    for key in new_data:
+        if key not in old_data:
+            added.append(new_data[key])
+
+    # 삭제된 항목
+    for key in old_data:
+        if key not in new_data:
+            removed.append(old_data[key])
+
+    return added, removed
+
+
+def log_changes(added, removed, log_filepath):
+    """변동 이력을 changes_log.csv에 기록"""
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst).strftime("%Y-%m-%d %H:%M")
+    
+    file_exists = os.path.exists(log_filepath) and os.path.getsize(log_filepath) > 0
+    
+    with open(log_filepath, "a", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["날짜", "변동유형", "검색어", "품목보고번호", "업체명", "제품명", "품목유형"])
+        
+        for item in added:
+            writer.writerow([
+                now, "추가",
+                item.get("검색어", ""),
+                item.get("품목보고번호", ""),
+                item.get("업체명", ""),
+                item.get("제품명", ""),
+                item.get("품목유형", "")
+            ])
+        
+        for item in removed:
+            writer.writerow([
+                now, "삭제",
+                item.get("검색어", ""),
+                item.get("품목보고번호", ""),
+                item.get("업체명", ""),
+                item.get("제품명", ""),
+                item.get("품목유형", "")
+            ])
+    
+    print(f"📝 변동 이력 기록: 추가 {len(added)}건, 삭제 {len(removed)}건")
+
 
 def scrape_korea_food_safety():
     keywords = ['풀무원', '풀스키친', '풀스쿡']
@@ -138,10 +214,27 @@ def scrape_korea_food_safety():
 
         browser.close()
 
+    # 변동 이력 비교 및 기록
+    csv_headers = ["검색어", "번호", "품목보고번호", "업체명", "품목유형", "소비기한", "제품명", "분류"]
+    csv_path = "food_data.csv"
+    log_path = "changes_log.csv"
+    
     if results:
-        with open("food_data.csv", "w", encoding="utf-8-sig", newline="") as f:
+        old_data = load_previous_data(csv_path)
+        
+        if old_data:
+            added, removed = detect_changes(old_data, results, csv_headers)
+            if added or removed:
+                log_changes(added, removed, log_path)
+                print(f"🔄 변동 감지: 추가 {len(added)}건, 삭제 {len(removed)}건")
+            else:
+                print("✅ 변동 없음: 이전 데이터와 동일합니다.")
+        else:
+            print("📋 최초 실행: 이전 데이터가 없으므로 비교를 건너뜁니다.")
+
+        with open(csv_path, "w", encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["검색어", "번호", "품목보고번호", "업체명", "품목유형", "소비기한", "제품명", "분류"])
+            writer.writerow(csv_headers)
             for r in results:
                 writer.writerow(r)
         print("Data successfully saved to food_data.csv")
@@ -159,3 +252,4 @@ def scrape_korea_food_safety():
 
 if __name__ == "__main__":
     scrape_korea_food_safety()
+
