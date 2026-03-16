@@ -41,6 +41,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add "Brand Data/food_data.csv" "Brand Data/changes_log.csv" "Brand Data/index.html"
-          git commit -m "Auto-update food_data.csv via GitHub Actions" || echo "No changes to commit"
-          git push
+          git add "Brand Data/food_data.csv" "Brand Data/index.html"
+          git add "Brand Data/changes_log.csv" 2>/dev/null || true
+          git diff --cached --quiet && echo "No changes to commit" || (git commit -m "Auto-update food_data.csv via GitHub Actions" && git push)
