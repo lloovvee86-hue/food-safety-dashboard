@@ -184,15 +184,17 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
 .col-time { font-family:'Roboto Mono', monospace; font-weight:800; color:#fff; line-height:1.4; white-space:nowrap; }
 .col-schedule { font-weight:600; color:#fff; line-height:1.4; }
 .col-schedule strong { color:var(--accent-blue); font-size:0.95rem; }
-.col-duration { font-weight:700; color:var(--accent-green); font-size:0.9rem; }
-.dist-val { font-size:0.75rem; color:#8b8fa3; font-weight:normal; margin-top:0.3rem; }
-.road-info { font-size:0.65rem; color:#6b7280; margin-top:0.8rem; font-weight:500; }
+.col-duration { font-weight:700; color:var(--accent-green); font-size:0.95rem; text-align:center; }
+.dist-val { font-size:0.8rem; color:#8b8fa3; font-weight:normal; margin-top:0.3rem; }
+.road-info { font-size:0.75rem; color:#9ca3af; margin-top:0.8rem; font-weight:500; line-height:1.4; }
 .col-remarks { color:#d1d5db; line-height:1.6; }
 
-.remark-addr { font-size:0.75rem; color:#9ca3af; margin-bottom:0.5rem; font-style:normal; }
-.remark-title { font-weight:800; color:#fff; margin-bottom:0.3rem; font-size:0.9rem; }
-.remark-content { font-size:0.82rem; color:#9ca3af; }
-.tag-node { display:inline-block; font-size:0.68rem; padding:2px 6px; border-radius:3px; background:#374151; color:#d1d5db; margin-bottom:0.3rem; margin-right:0.2rem; border:1px solid #4b5563; }
+.remark-addr { font-size:0.8rem; color:#9ca3af; margin-bottom:0.6rem; font-style:normal; }
+.remark-title { font-weight:800; color:#fff; margin-bottom:0.4rem; font-size:1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.2rem; display:inline-block; }
+.remark-content { font-size:0.9rem; color:#d1d5db; white-space:pre-wrap; }
+.tag-node { display:inline-block; font-size:0.75rem; padding:3px 8px; border-radius:4px; background:#374151; color:#fff; margin-bottom:0.4rem; margin-right:0.3rem; border:1px solid #4b5563; }
+
+.memo-card .road-info { display:none; } /* Hide sequence in memo card to reduce clutter */
 
 .result-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); }
 

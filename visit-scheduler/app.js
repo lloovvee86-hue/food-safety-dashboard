@@ -509,16 +509,19 @@
                 </div>
                 <div class="memo-field">
                     <label>상세 내용</label>
-                    <textarea class="memo-textarea" placeholder="상세 내용을 입력하세요">${state.memos[id].content}</textarea>
+                    <textarea class="memo-content-input" placeholder="상세 내용을 입력하세요">${state.memos[id].content}</textarea>
                 </div>
             `;
             
-            // Event Listeners for saving
-            card.querySelector('.memo-input').addEventListener('input', (e) => {
+            // Update state and Table when input changes
+            card.querySelector('.memo-title-input').addEventListener('input', (e) => {
                 state.memos[id].title = e.target.value;
+                syncMemoToTable(id, 'title', e.target.value);
             });
-            card.querySelector('.memo-textarea').addEventListener('input', (e) => {
+
+            card.querySelector('.memo-content-input').addEventListener('input', (e) => {
                 state.memos[id].content = e.target.value;
+                syncMemoToTable(id, 'content', e.target.value);
             });
             
             container.appendChild(card);
@@ -825,7 +828,7 @@
                 const mContent = (memo.content && memo.content !== '상세 내용을 입력하세요') ? memo.content : '';
 
                 tableHtml += `
-                    <tr class="row-stay">
+                    <tr class="row-stay" data-point-id="${id}">
                         <td class="col-time">${startTime} ~<br>${endTime}</td>
                         <td class="col-schedule"><strong>${point.name}</strong></td>
                         <td class="col-duration">${stayMin} min</td>
@@ -847,6 +850,48 @@
         els.resultSegments.innerHTML = tableHtml;
         els.resultPanel.classList.add('visible');
         showToast('✅ 주행 일정이 비즈니스 보고서 형태로 업데이트되었습니다!');
+    }
+
+    /**
+     * Real-time sync from Memo Panel to Itinerary Table
+     */
+    function syncMemoToTable(id, type, value) {
+        const table = els.resultSegments.querySelector('.itinerary-table');
+        if (!table) return;
+
+        // Find the stay row for this point
+        // We use data attributes to find the correct cell
+        const rows = table.querySelectorAll('.row-stay');
+        rows.forEach(row => {
+            if (row.dataset.pointId === id) {
+                const remarksCell = row.querySelector('.col-remarks');
+                if (type === 'title') {
+                    let titleEl = remarksCell.querySelector('.remark-title');
+                    if (value && value !== '업무 제목을 입력하세요') {
+                        if (!titleEl) {
+                            titleEl = document.createElement('div');
+                            titleEl.className = 'remark-title';
+                            remarksCell.appendChild(titleEl);
+                        }
+                        titleEl.textContent = '📌 ' + value;
+                    } else if (titleEl) {
+                        titleEl.remove();
+                    }
+                } else if (type === 'content') {
+                    let contentEl = remarksCell.querySelector('.remark-content');
+                    if (value && value !== '상세 내용을 입력하세요') {
+                        if (!contentEl) {
+                            contentEl = document.createElement('div');
+                            contentEl.className = 'remark-content';
+                            remarksCell.appendChild(contentEl);
+                        }
+                        contentEl.textContent = value;
+                    } else if (contentEl) {
+                        contentEl.remove();
+                    }
+                }
+            }
+        });
     }
 
     function formatTime(minutes) {
