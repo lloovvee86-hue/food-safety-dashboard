@@ -168,40 +168,31 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
 .placeholder-content p { color:var(--text-secondary); font-size:0.9rem; }
 .placeholder-sub { color:var(--text-muted)!important; font-size:0.8rem!important; margin-top:0.3rem; }
 
-/* Result Panel */
-.result-panel { background:var(--bg-secondary); border-top:1px solid var(--border-subtle); padding:1.2rem 1.5rem; display:none; }
-.result-panel.visible { display:block; animation:slideUp 0.4s ease; }
-@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-.result-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
-.result-header h2 { font-size:1.05rem; font-weight:700; }
-.result-summary { display:flex; gap:1.5rem; }
-.summary-item { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 1rem; background:var(--bg-glass); border-radius:var(--radius-sm); border:1px solid var(--border-subtle); }
-.summary-label { font-size:0.75rem; color:var(--text-secondary); }
-.summary-value { font-size:1.1rem; font-weight:700; color:var(--accent-green); }
-.result-segments { display:flex; gap:0.8rem; overflow-x:auto; padding-bottom:0.5rem; }
-.segment-card { background:var(--bg-glass); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1rem 1.2rem; min-width:200px; flex-shrink:0; transition:all var(--transition-fast); }
-.segment-card:hover { border-color:var(--border-light); background:var(--bg-card-hover); }
-.segment-time-line { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; padding-bottom:0.8rem; border-bottom:1px dashed var(--border-subtle); }
-.time-node { display:flex; flex-direction:column; align-items:center; }
-.time-val { font-size:1.2rem; font-weight:800; color:var(--accent-green); line-height:1; }
-.time-label { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; margin-top:0.2rem; }
-.time-divider { flex:1; height:1px; background:linear-gradient(to right, var(--accent-green-dim), transparent, var(--accent-green-dim)); margin:0 1rem; position:relative; }
-.time-divider::after { content:'→'; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:var(--text-muted); font-size:0.8rem; }
-.segment-route { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem; }
-.segment-from,.segment-to { font-size:0.85rem; font-weight:600; max-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.segment-arrow { color:var(--text-muted); font-size:0.8rem; flex-shrink:0; }
-.segment-details { display:flex; gap:1rem; }
-.segment-time,.segment-distance { font-size:0.78rem; color:var(--text-secondary); }
-.segment-time span,.segment-distance span { font-weight:600; color:var(--accent-green); }
+/* Result Panel & Itinerary Table */
+.result-panel { position:fixed; bottom:0; left:0; right:0; background:var(--bg-panel); border-top:1px solid var(--border-subtle); padding:1.5rem; z-index:100; transform:translateY(100%); transition:transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); max-height:45vh; overflow-y:auto; box-shadow:0 -10px 40px rgba(0,0,0,0.5); }
+.result-panel.visible { transform:translateY(0); }
 
-/* Road Info Sequence (Optimized) */
-.segment-roads-sequence, .memo-road-sequence { display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem; margin-bottom:0.8rem; }
-.road-item { font-size:0.75rem; font-weight:600; color:var(--text-secondary); padding:0.1rem 0.3rem; border-radius:3px; background:var(--bg-glass); border:1px solid var(--border-subtle); }
-.road-item.express { color:#2ecc71; border-color:#2ecc71; background:rgba(46, 204, 113, 0.1); }
-.road-sep { font-size:0.7rem; color:var(--text-muted); font-weight:800; opacity:0.5; }
+.itinerary-table { width:100%; border-collapse:collapse; background:rgba(255,255,255,0.02); border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); font-size:0.85rem; margin-top:1rem; }
+.itinerary-table th { background:rgba(255,255,255,0.05); color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.7rem; letter-spacing:0.05em; padding:12px; border-bottom:1px solid var(--border-subtle); text-align:left; }
+.itinerary-table td { padding:14px 12px; border-bottom:1px solid rgba(255,255,255,0.03); vertical-align:top; border-right:1px solid rgba(255,255,255,0.03); }
+.itinerary-table td:last-child { border-right:none; }
 
-.node-tags { display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.4rem; }
-.node-tag { font-size:0.65rem; color:var(--text-muted); padding:0.1rem 0.3rem; background:var(--bg-glass); border:1px solid var(--border-subtle); border-radius:3px; }
+.row-travel { background:rgba(46, 204, 113, 0.03); }
+.row-stay { background:rgba(52, 152, 219, 0.03); }
+
+.col-time { font-family:'Roboto Mono', monospace; font-weight:700; color:var(--text-primary); line-height:1.4; white-space:nowrap; }
+.col-schedule { font-weight:500; color:var(--text-secondary); line-height:1.4; }
+.col-schedule strong { color:var(--accent-blue); font-size:0.9rem; }
+.col-duration { font-weight:600; color:var(--accent-green); }
+.dist-val { font-size:0.75rem; color:var(--text-muted); font-weight:normal; margin-top:0.2rem; }
+.road-info { font-size:0.65rem; color:var(--text-muted); margin-top:0.6rem; font-style:italic; }
+.col-remarks { color:var(--text-secondary); line-height:1.5; }
+
+.remark-title { font-weight:700; color:var(--text-primary); margin-bottom:0.3rem; }
+.remark-content { font-size:0.8rem; color:var(--text-secondary); }
+.tag-node { display:inline-block; font-size:0.65rem; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.1); color:var(--text-muted); margin-bottom:0.2rem; }
+
+.result-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--border-subtle); }
 
 /* Toast */
 .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px); background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:0.8rem 1.5rem; color:var(--text-primary); font-size:0.9rem; box-shadow:var(--shadow-lg); backdrop-filter:blur(12px); z-index:200; opacity:0; transition:all var(--transition-base); pointer-events:none; }

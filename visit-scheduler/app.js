@@ -745,6 +745,9 @@
     }
 
     function displayResults(segments, totalDistance, totalTime) {
+        if (!els.resultPanel || !els.resultSegments) return;
+
+        // Header Summary
         els.resultSummary.innerHTML = `
             <div class="summary-item">
                 <span class="summary-label">총 거리</span>
@@ -752,56 +755,86 @@
             </div>
             <div class="summary-item">
                 <span class="summary-label">총 소요시간</span>
-                <span class="summary-value">${formatTime(totalTime)}</span>
+                <span class="summary-value">${Math.floor(totalTime / 60)}h ${totalTime % 60}m</span>
             </div>
             <div class="summary-item">
-                <span class="summary-label">경유지</span>
-                <span class="summary-value">${state.waypoints.filter(w => w.lat).length}곳</span>
+                <span class="summary-label">방문처</span>
+                <span class="summary-value">${state.waypoints.filter(w => w.lat).length + 1}곳</span>
             </div>
         `;
 
-        els.resultSegments.innerHTML = segments.map(seg => `
-            <div class="segment-card">
-                <div class="segment-time-line">
-                    <div class="time-node">
-                        <span class="time-val">${seg.depTime}</span>
-                        <span class="time-label">출발</span>
-                    </div>
-                    <div class="time-divider"></div>
-                    <div class="time-node">
-                        <span class="time-val">${seg.arrTime}</span>
-                        <span class="time-label">도착</span>
-                    </div>
-                </div>
+        const allPoints = getAllPoints();
+        const waypointsEls = els.waypointsContainer.querySelectorAll('.waypoint-item');
+        const stayDurations = Array.from(waypointsEls).map(el => 
+            parseInt(el.querySelector('.stay-duration-input').value) || 0
+        );
+
+        let tableHtml = `
+            <table class="itinerary-table">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">시 간</th>
+                        <th style="width: 25%;">일 정</th>
+                        <th style="width: 20%;">소요시간</th>
+                        <th style="width: 37%;">비 고</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        segments.forEach((seg, i) => {
+            // 1. Travel Row
+            tableHtml += `
+                <tr class="row-travel">
+                    <td class="col-time">${seg.depTime} ~<br>${seg.arrTime}</td>
+                    <td class="col-schedule">${seg.from} ~<br>${seg.to}</td>
+                    <td class="col-duration">
+                        <div class="dur-val">${seg.time} min</div>
+                        <div class="dist-val">(약 ${seg.distance.toFixed(1)} km)</div>
+                        <div class="road-info">${(seg.majorRoads || []).map(r => r.name).join(' >> ')}</div>
+                    </td>
+                    <td class="col-remarks">
+                        ${(seg.keyNodes || []).map(n => `<span class="tag-node">${n}</span>`).join(' ')}
+                    </td>
+                </tr>
+            `;
+
+            // 2. Stay Row
+            if (i < segments.length) {
+                const point = allPoints[i + 1];
+                const id = point.id || `${point.lat}-${point.lng}`;
+                const stayMin = i < stayDurations.length ? stayDurations[i] : 0;
                 
-                <div class="segment-roads-sequence">
-                    ${seg.majorRoads.map((road, ri) => `
-                        <span class="road-item ${road.type === 'express' ? 'express' : ''}">${road.name}</span>
-                        ${ri < seg.majorRoads.length - 1 ? '<span class="road-sep">>></span>' : ''}
-                    `).join('')}
-                </div>
+                const memo = state.memos[id] || { title: '', content: '' };
+                const startTime = seg.arrTime;
+                
+                let [h, m] = startTime.split(':').map(Number);
+                let endMin = h * 60 + m + stayMin;
+                const endTime = `${String(Math.floor((endMin % 1440) / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
-                <div class="segment-route">
-                    <span class="segment-from">${seg.from}</span>
-                    <span class="segment-arrow">→</span>
-                    <span class="segment-to">${seg.to}</span>
-                </div>
+                tableHtml += `
+                    <tr class="row-stay">
+                        <td class="col-time">${startTime} ~<br>${endTime}</td>
+                        <td class="col-schedule"><strong>${point.name}</strong></td>
+                        <td class="col-duration">${stayMin} min</td>
+                        <td class="col-remarks">
+                            <div class="remark-addr">${point.address || ''}</div>
+                            ${memo.title ? `<div class="remark-title">📌 ${memo.title}</div>` : ''}
+                            ${memo.content ? `<div class="remark-content">${memo.content}</div>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }
+        });
 
-                <div class="node-tags">
-                    ${(seg.keyNodes || []).map(node => `
-                        <span class="node-tag">${node}</span>
-                    `).join('')}
-                </div>
+        tableHtml += `
+                </tbody>
+            </table>
+        `;
 
-                <div class="segment-details" style="margin-top: 0.8rem; border-top: 1px solid var(--border-subtle); padding-top: 0.6rem;">
-                    <div class="segment-time">⏱️ <span>${seg.time}</span>분</div>
-                    <div class="segment-distance">🛣️ <span>${seg.distance.toFixed(1)}</span>km</div>
-                </div>
-            </div>
-        `).join('');
-
+        els.resultSegments.innerHTML = tableHtml;
         els.resultPanel.classList.add('visible');
-        showToast('✅ 경로 계산이 완료되었습니다!');
+        showToast('✅ 주행 일정이 비즈니스 보고서 형태로 생성되었습니다!');
     }
 
     function formatTime(minutes) {
