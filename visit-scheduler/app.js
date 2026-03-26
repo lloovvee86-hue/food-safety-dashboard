@@ -713,8 +713,6 @@
         });
 
         // Draw real polyline
-        // Kakao pathData should be flattened or structured correctly.
-        // Assuming pathData from Kakao Mobility Directions contains coordinates.
         const linePath = [];
         pathData.forEach(pos => {
             const latlng = new kakao.maps.LatLng(pos.y, pos.x);
@@ -769,14 +767,22 @@
             parseInt(el.querySelector('.stay-duration-input').value) || 0
         );
 
+        // Get current date for the title
+        const now = new Date();
+        const dateStr = `${now.getMonth() + 1}/${now.getDate()}`;
+        const dayStr = ['일','월','화','수','목','금','토'][now.getDay()];
+
         let tableHtml = `
+            <div class="itinerary-title-bar">
+                1. 현장방문 세부계획 (${dateStr}(${dayStr}) ${els.departureTimeInput.value} ~ )
+            </div>
             <table class="itinerary-table">
                 <thead>
                     <tr>
-                        <th style="width: 18%;">시 간</th>
+                        <th style="width: 15%;">시 간</th>
                         <th style="width: 25%;">일 정</th>
-                        <th style="width: 20%;">소요시간</th>
-                        <th style="width: 37%;">비 고</th>
+                        <th style="width: 15%;">소요시간</th>
+                        <th style="width: 45%;">비 고</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -794,7 +800,9 @@
                         <div class="road-info">${(seg.majorRoads || []).map(r => r.name).join(' >> ')}</div>
                     </td>
                     <td class="col-remarks">
-                        ${(seg.keyNodes || []).map(n => `<span class="tag-node">${n}</span>`).join(' ')}
+                        <div class="road-tags">
+                            ${(seg.keyNodes || []).map(n => `<span class="tag-node">${n}</span>`).join(' ')}
+                        </div>
                     </td>
                 </tr>
             `;
@@ -812,15 +820,19 @@
                 let endMin = h * 60 + m + stayMin;
                 const endTime = `${String(Math.floor((endMin % 1440) / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
+                // Filter out placeholder text
+                const mTitle = (memo.title && memo.title !== '업무 제목을 입력하세요') ? memo.title : '';
+                const mContent = (memo.content && memo.content !== '상세 내용을 입력하세요') ? memo.content : '';
+
                 tableHtml += `
                     <tr class="row-stay">
                         <td class="col-time">${startTime} ~<br>${endTime}</td>
                         <td class="col-schedule"><strong>${point.name}</strong></td>
                         <td class="col-duration">${stayMin} min</td>
                         <td class="col-remarks">
-                            <div class="remark-addr">${point.address || ''}</div>
-                            ${memo.title ? `<div class="remark-title">📌 ${memo.title}</div>` : ''}
-                            ${memo.content ? `<div class="remark-content">${memo.content}</div>` : ''}
+                            <div class="remark-addr">📍 ${point.address || ''}</div>
+                            ${mTitle ? `<div class="remark-title">📌 ${mTitle}</div>` : ''}
+                            ${mContent ? `<div class="remark-content">${mContent}</div>` : ''}
                         </td>
                     </tr>
                 `;
@@ -834,7 +846,7 @@
 
         els.resultSegments.innerHTML = tableHtml;
         els.resultPanel.classList.add('visible');
-        showToast('✅ 주행 일정이 비즈니스 보고서 형태로 생성되었습니다!');
+        showToast('✅ 주행 일정이 비즈니스 보고서 형태로 업데이트되었습니다!');
     }
 
     function formatTime(minutes) {
