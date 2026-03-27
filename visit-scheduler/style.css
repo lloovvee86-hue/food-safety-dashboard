@@ -272,6 +272,49 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
     color: #4a4d5e;
     font-weight: 400;
 }
+
+/* Travel Segment Remarks/Breaks */
+.travel-remark-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.input-travel-remark {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    width: 100%;
+    outline: none;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.input-travel-remark:focus {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom-color: var(--accent-blue);
+}
+
+.break-input-wrapper {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #8b8fa3;
+    gap: 4px;
+}
+
+.input-travel-break {
+    background: rgba(52, 152, 219, 0.1);
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    color: var(--accent-blue);
+    font-size: 0.75rem;
+    padding: 0 4px;
+    width: 45px;
+    border-radius: 4px;
+    outline: none;
+}
 .remark-title { font-weight:800; color:#fff; margin-bottom:0.3rem; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.1rem; display:inline-block; }
 .remark-content { font-size:0.8rem; color:#d1d5db; white-space:pre-wrap; }
 .tag-node { display:inline-block; font-size:0.65rem; padding:2px 6px; border-radius:4px; background:#374151; color:#fff; margin-bottom:0.3rem; margin-right:0.2rem; border:1px solid #4b5563; }

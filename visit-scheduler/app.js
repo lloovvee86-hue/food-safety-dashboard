@@ -12,6 +12,8 @@
         apiSecret: localStorage.getItem('kakao_rest_key') || '007cb32ee7d003fec1bd6fc308b7ece7',
         departureTime: '09:00',
         contacts: {}, // { id: "text" }
+        segmentBreaks: {}, // { "fromName-toName": minutes }
+        segmentRemarks: {}, // { "fromName-toName": text }
         lastSegments: [], 
         mapLoaded: false,
         map: null,
@@ -682,17 +684,22 @@
                     .map(g => g.name);
                 const uniqueNodes = [...new Set(keyNodes)].slice(0, 4); // Limit to top 4 key points
 
-                const durMin = Math.round(section.duration / 60);
+                const segmentId = `${points[i].name}-${points[i+1].name}`;
+                const breakMin = state.segmentBreaks[segmentId] || 0;
+                
+                const durMin = Math.round(section.duration / 60) + breakMin;
                 const roundedDur = Math.round(durMin / 10) * 10;
 
                 const depTime = `${String(Math.floor((currentTime % 1440) / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
                 const arrTime = `${String(Math.floor(((currentTime + roundedDur) % 1440) / 60)).padStart(2, '0')}:${String((currentTime + roundedDur) % 60).padStart(2, '0')}`;
 
                 const segment = {
+                    id: segmentId,
                     from: points[i].name,
                     to: points[i+1].name,
                     distance: section.distance / 1000,
                     time: durMin, // Raw for display
+                    breakTime: breakMin,
                     roundedTime: roundedDur, // For calculation
                     depTime: depTime,
                     arrTime: arrTime,
@@ -734,18 +741,23 @@
         for (let i = 0; i < points.length - 1; i++) {
             const from = points[i];
             const to = points[i + 1];
+            const segmentId = `${from.name}-${to.name}`;
+            const breakMin = state.segmentBreaks[segmentId] || 0;
+
             const dist = haversineDistance(from.lat, from.lng, to.lat, to.lng);
-            const durMin = Math.round(dist / 50 * 60);
+            const durMin = Math.round(dist / 50 * 60) + breakMin;
             const roundedDur = Math.round(durMin / 10) * 10;
 
             const depTime = `${String(Math.floor((currentTime % 1440) / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
             const arrTime = `${String(Math.floor(((currentTime + roundedDur) % 1440) / 60)).padStart(2, '0')}:${String((currentTime + roundedDur) % 60).padStart(2, '0')}`;
 
             segments.push({
+                id: segmentId,
                 from: from.name,
                 to: to.name,
                 distance: dist,
                 time: durMin,
+                breakTime: breakMin,
                 roundedTime: roundedDur,
                 depTime: depTime,
                 arrTime: arrTime,
@@ -873,6 +885,20 @@
                         <div class="road-info">${(seg.majorRoads || []).map(r => r.name).join(' >> ')}</div>
                     </td>
                     <td class="col-remarks">
+                        <div class="travel-remark-group">
+                            <input type="text" class="input-travel-remark" 
+                                data-segment-id="${seg.id}" 
+                                value="${state.segmentRemarks[seg.id] || ''}" 
+                                placeholder="이동 시 비고 (예: 중식 포함)">
+                            <div class="break-input-wrapper">
+                                <span>추가 정지: </span>
+                                <input type="number" class="input-travel-break" 
+                                    data-segment-id="${seg.id}" 
+                                    value="${state.segmentBreaks[seg.id] || 0}" 
+                                    min="0" step="10">
+                                <span>분</span>
+                            </div>
+                        </div>
                         <div class="road-tags">
                             ${(seg.keyNodes || []).map(n => `<span class="tag-node">${n}</span>`).join(' ')}
                         </div>
@@ -920,6 +946,24 @@
             input.addEventListener('input', (e) => {
                 const id = e.target.dataset.pointId;
                 state.contacts[id] = e.target.value;
+            });
+        });
+
+        // Setup travel remark sync
+        els.itineraryContainer.querySelectorAll('.input-travel-remark').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const id = e.target.dataset.segmentId;
+                state.segmentRemarks[id] = e.target.value;
+            });
+        });
+
+        // Setup travel break sync
+        els.itineraryContainer.querySelectorAll('.input-travel-break').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const id = e.target.dataset.segmentId;
+                state.segmentBreaks[id] = parseInt(e.target.value) || 0;
+                // Re-calculate route since time changed
+                calculateRoute(); 
             });
         });
 
