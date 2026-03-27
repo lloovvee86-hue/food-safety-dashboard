@@ -258,6 +258,7 @@
             
             if (query.length < 2) {
                 dropdown.classList.remove('active');
+                clearTimeout(debounceTimer);
                 return;
             }
             clearTimeout(debounceTimer);
@@ -274,63 +275,45 @@
         });
     }
 
-    async function searchPlaces(query, dropdown, onSelect) {
-        try {
-            const url = `http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`;
-            console.log(`DEBUG: Sending search request to proxy: ${url}`);
-            
-            const response = await fetch(url, {
-                headers: {
-                    'X-NCP-APIGW-API-KEY': state.apiSecret
+    function searchPlaces(query, dropdown, onSelect) {
+        // 1. Try Kakao SDK Search first
+        if (window.kakao && kakao.maps && kakao.maps.services) {
+            const ps = new kakao.maps.services.Places();
+            ps.keywordSearch(query, (data, status) => {
+                if (status === kakao.maps.services.Status.OK) {
+                    dropdown.innerHTML = '';
+                    data.forEach(item => {
+                        const place = {
+                            name: item.place_name,
+                            address: item.road_address_name || item.address_name,
+                            lat: parseFloat(item.y),
+                            lng: parseFloat(item.x),
+                            category: item.category_group_name
+                        };
+                        const div = createDropdownItem(place, onSelect, dropdown);
+                        dropdown.appendChild(div);
+                    });
+                    dropdown.classList.add('active');
+                } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+                    showDemoResults(query, dropdown, onSelect, true);
+                } else {
+                    showDemoResults(query, dropdown, onSelect, false);
                 }
             });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('DEBUG: Proxy Error:', errorData);
-                throw new Error(`Proxy status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log(`DEBUG: Search successful, found ${data.documents ? data.documents.length : 0} items`);
-            
-            if (data.documents && data.documents.length > 0) {
-                dropdown.innerHTML = '';
-                data.documents.forEach(item => {
-                    const div = createDropdownItem({
-                        name: item.place_name,
-                        address: item.road_address_name || item.address_name,
-                        category: item.category_group_name,
-                        lat: parseFloat(item.y),
-                        lng: parseFloat(item.x)
-                    }, onSelect, dropdown);
-                    dropdown.appendChild(div);
-                });
-                dropdown.classList.add('active');
-                return;
-            }
-        } catch (e) {
-            console.error("DEBUG: Search failed entirely:", e);
-            if (e.message.includes('Failed to fetch')) {
-                showToast('❌ 백엔드 서버(Flask)가 꺼져있는 것 같습니다! 터미널을 확인해주세요.');
-            }
+        } else {
+            // 2. Fallback to Demo if SDK not available
+            showDemoResults(query, dropdown, onSelect, false);
         }
-
-        // Fallback to Demo Results
-        showDemoResults(query, dropdown, onSelect);
     }
 
-    // Demo results when API is not available
-    function showDemoResults(query, dropdown, onSelect) {
+    // Demo results when API is not available or search fails
+    function showDemoResults(query, dropdown, onSelect, isZeroResult) {
         const demoPlaces = [
             { name: '풀무원 본사', address: '서울특별시 강남구 테헤란로 340', category: '기업 본사', lat: 37.5085, lng: 127.0622 },
-            { name: '풀무원 음성공장', address: '충청북도 음성군 대소면 풀무원로 1', category: '제조공장', lat: 36.9381, lng: 127.5867 },
-            { name: '풀무원 춘천공장', address: '강원도 춘천시 동면 풀무원길 50', category: '제조공장', lat: 37.8813, lng: 127.7689 },
-            { name: '풀무원 익산공장', address: '전라북도 익산시 왕궁면 풀무원로 100', category: '제조공장', lat: 35.9584, lng: 127.0012 },
-            { name: '풀무원 연구소', address: '경기도 용인시 처인구 남사읍 봉무로 200', category: '연구개발', lat: 37.1342, lng: 127.1234 },
-            { name: '서울역', address: '서울특별시 용산구 한강대로 405', category: '교통', lat: 37.5547, lng: 126.9707 },
-            { name: '수원역', address: '경기도 수원시 팔달구 덕영대로 924', category: '교통', lat: 37.2660, lng: 127.0001 },
-            { name: '인천국제공항', address: '인천광역시 중구 공항로 272', category: '공항', lat: 37.4602, lng: 126.4407 },
+            { name: '풀무원 오송연구소', address: '충남 천안시 서북구 오송읍', category: '연구소', lat: 36.634, lng: 127.311 },
+            { name: '서울식품공업', address: '충청북도 충주시 신니면', category: '제조공장', lat: 37.012, lng: 127.712 },
+            { name: '수서역', address: '서울특별시 강남구 수서동', category: '교통', lat: 37.487, lng: 127.101 },
+            { name: '서울역', address: '서울특별시 용산구 한강대로 405', category: '교통', lat: 37.554, lng: 126.971 },
         ];
 
         const filtered = demoPlaces.filter(p =>
@@ -339,15 +322,16 @@
 
         dropdown.innerHTML = '';
         if (filtered.length === 0) {
-            // Show a "no results" message with demo suggestion
             const noResult = document.createElement('div');
             noResult.className = 'dropdown-item';
+            noResult.style.pointerEvents = 'none';
             noResult.innerHTML = `
                 <div class="dropdown-item-name" style="color:var(--text-muted)">검색 결과 없음</div>
-                <div class="dropdown-item-address">API Key를 설정하면 실제 장소를 검색할 수 있습니다.</div>
+                <div class="dropdown-item-address">${isZeroResult ? `'${query}'에 대한 실제 장소 결과가 없습니다.` : 'API Key를 설정하면 실제 장소를 검색할 수 있습니다.'}</div>
             `;
             dropdown.appendChild(noResult);
-            // Also still show all demo places below
+            
+            // Show all common demo places as suggestion
             demoPlaces.slice(0, 5).forEach(place => {
                 dropdown.appendChild(createDropdownItem(place, onSelect, dropdown));
             });
