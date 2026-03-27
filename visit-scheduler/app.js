@@ -57,6 +57,7 @@
     // ===== Init =====
     function init() {
         setupEventListeners();
+        initDragAndDrop();
         if (state.apiKey) {
             hideModal();
             loadKakaoMapScript();
@@ -369,9 +370,11 @@
         state.waypoints.push(wpData);
 
         const wpEl = document.createElement('div');
-        wpEl.className = 'waypoint-item';
+        wpEl.className = 'route-item waypoint-item draggable';
         wpEl.dataset.waypointId = id;
+        wpEl.setAttribute('draggable', 'true');
         wpEl.innerHTML = `
+            <div class="drag-handle">⋮⋮</div>
             <div class="route-marker">
                 <div class="marker-line marker-line-top"></div>
                 <div class="marker-dot waypoint-dot"></div>
@@ -379,7 +382,7 @@
             </div>
             <div class="waypoint-input-group">
                 <div class="waypoint-header">
-                    <label>경유지 ${state.waypointCounter}</label>
+                    <label>경유지 ${state.waypoints.length}</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <div class="time-input-wrapper">
                             <span>체류:</span>
@@ -429,6 +432,7 @@
         });
 
         updateButtonStates();
+        renumberWaypoints(); // Added: ensure colors/labels are right
         wpInput.focus();
         showToast(`📍 경유지 ${state.waypointCounter}이(가) 추가되었습니다.`);
     }
@@ -445,11 +449,132 @@
     }
 
     function renumberWaypoints() {
-        const items = els.waypointsContainer.querySelectorAll('.waypoint-item');
+        const routeList = els.routeList || $('#routeList');
+        const items = routeList.querySelectorAll('.route-item');
+        
         items.forEach((item, i) => {
+            const isFirst = i === 0;
+            const isLast = i === items.length - 1;
             const label = item.querySelector('.waypoint-header label');
-            if (label) label.textContent = `경유지 ${i + 1}`;
+            const dot = item.querySelector('.marker-dot');
+            
+            // Update Labels
+            if (isFirst) {
+                if (label) label.textContent = '출발지';
+                if (dot) {
+                    dot.className = 'marker-dot departure-dot';
+                    const lines = item.querySelectorAll('.marker-line');
+                    lines.forEach(l => l.style.display = 'block');
+                    if (item.querySelector('.marker-line-top')) item.querySelector('.marker-line-top').style.display = 'none';
+                }
+            } else if (isLast) {
+                if (label) label.textContent = '도착지';
+                if (dot) {
+                    dot.className = 'marker-dot arrival-dot';
+                    const lines = item.querySelectorAll('.marker-line');
+                    lines.forEach(l => l.style.display = 'none');
+                    if (item.querySelector('.marker-line-top')) item.querySelector('.marker-line-top').style.display = 'block';
+                }
+            } else {
+                if (label) label.textContent = `경유지 ${i}`;
+                if (dot) {
+                    dot.className = 'marker-dot waypoint-dot';
+                    const lines = item.querySelectorAll('.marker-line');
+                    lines.forEach(l => l.style.display = 'block');
+                }
+            }
         });
+        
+        updateStateFromDOM();
+    }
+
+    function initDragAndDrop() {
+        const routeList = $('#routeList');
+        let draggedEl = null;
+
+        routeList.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('.route-item');
+            if (!item) return;
+            draggedEl = item;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        routeList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.route-item');
+            if (!item || item === draggedEl) return;
+            item.classList.add('drag-over');
+        });
+
+        routeList.addEventListener('dragleave', (e) => {
+            const item = e.target.closest('.route-item');
+            if (item) item.classList.remove('drag-over');
+        });
+
+        routeList.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const targetItem = e.target.closest('.route-item');
+            if (!targetItem || targetItem === draggedEl) return;
+
+            targetItem.classList.remove('drag-over');
+            
+            // Determine position
+            const rect = targetItem.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            
+            if (e.clientY < midY) {
+                targetItem.parentNode.insertBefore(draggedEl, targetItem);
+            } else {
+                targetItem.parentNode.insertBefore(draggedEl, targetItem.nextSibling);
+            }
+            
+            renumberWaypoints();
+            updateMap();
+            // Automatically recalculate if we have results
+            if (state.lastSegments.length > 0) {
+                calculateRoute();
+            }
+        });
+
+        routeList.addEventListener('dragend', () => {
+            if (draggedEl) draggedEl.classList.remove('dragging');
+            $$('.route-item').forEach(el => el.classList.remove('drag-over'));
+            draggedEl = null;
+        });
+    }
+
+    function updateStateFromDOM() {
+        const routeList = $('#routeList');
+        const items = routeList.querySelectorAll('.route-item');
+        const newWaypoints = [];
+        
+        items.forEach((item, i) => {
+            // Find data in state based on this DOM element
+            // We can check if it's the old departureItem, arrivalItem, or a waypoint-item
+            const wpId = item.dataset.waypointId;
+            
+            let data = null;
+            if (item.id === 'departureItem') {
+                data = state.departure;
+            } else if (item.id === 'arrivalItem') {
+                data = state.arrival;
+            } else {
+                data = state.waypoints.find(wp => wp.id === wpId);
+            }
+
+            if (!data) return;
+
+            if (i === 0) {
+                state.departure = data;
+            } else if (i === items.length - 1) {
+                state.arrival = data;
+            } else {
+                newWaypoints.push(data);
+            }
+        });
+        
+        state.waypoints = newWaypoints;
     }
 
     // ===== Button States =====

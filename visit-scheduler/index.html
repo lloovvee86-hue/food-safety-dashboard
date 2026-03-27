@@ -75,30 +75,52 @@
             </div>
 
             <!-- Departure -->
-            <div class="route-item departure" data-type="departure">
-                <div class="route-marker">
-                    <div class="marker-dot departure-dot"></div>
-                    <div class="marker-line"></div>
-                </div>
-                <div class="route-input-group">
-                    <div class="label-row">
-                        <label>출발지</label>
-                        <div class="time-input-wrapper">
-                            <span>출발시간:</span>
-                            <input type="time" id="departureTime" value="09:00">
+            <div id="routeList" class="route-list">
+                <!-- Departure -->
+                <div id="departureItem" class="route-item departure-item draggable" draggable="true" data-type="departure">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="route-marker">
+                        <div class="marker-dot departure-dot"></div>
+                        <div class="marker-line"></div>
+                    </div>
+                    <div class="waypoint-input-group">
+                        <div class="waypoint-header">
+                            <label>출발지</label>
+                            <div class="time-input-wrapper">
+                                <span>출발시간:</span>
+                                <input type="time" id="departureTime" value="09:00">
+                            </div>
                         </div>
+                        <div class="search-wrapper">
+                            <input type="text" id="departureInput" class="location-input" placeholder="출발지를 검색하세요" autocomplete="off">
+                            <div id="departureDropdown" class="search-dropdown"></div>
+                        </div>
+                        <div id="departureInfo" class="location-info"></div>
                     </div>
-                    <div class="search-wrapper">
-                        <input type="text" class="location-input" id="departureInput" placeholder="출발 장소를 검색하세요"
-                            autocomplete="off">
-                        <div class="search-dropdown" id="departureDropdown"></div>
+                </div>
+
+                <!-- Waypoints Container -->
+                <div id="waypointsContainer"></div>
+
+                <!-- Arrival -->
+                <div id="arrivalItem" class="route-item arrival-item draggable" draggable="true" data-type="arrival">
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="route-marker">
+                        <div class="marker-line marker-line-top"></div>
+                        <div class="marker-dot arrival-dot"></div>
                     </div>
-                    <div class="location-info" id="departureInfo"></div>
+                    <div class="waypoint-input-group">
+                        <div class="waypoint-header">
+                            <label>도착지</label>
+                        </div>
+                        <div class="search-wrapper">
+                            <input type="text" id="arrivalInput" class="location-input" placeholder="도착지를 검색하세요" autocomplete="off">
+                            <div id="arrivalDropdown" class="search-dropdown"></div>
+                        </div>
+                        <div id="arrivalInfo" class="location-info"></div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Waypoints Container -->
-            <div id="waypointsContainer"></div>
 
             <!-- Add Waypoint Button -->
             <div class="add-waypoint-wrapper">
@@ -111,19 +133,6 @@
                 </button>
             </div>
 
-            <!-- Arrival -->
-            <div class="route-item arrival" data-type="arrival">
-                <div class="route-marker">
-                    <div class="marker-line marker-line-top"></div>
-                    <div class="marker-dot arrival-dot"></div>
-                </div>
-                <div class="route-input-group">
-                    <label>도착지</label>
-                    <div class="search-wrapper">
-                        <input type="text" class="location-input" id="arrivalInput" placeholder="도착 장소를 검색하세요"
-                            autocomplete="off">
-                        <div class="search-dropdown" id="arrivalDropdown"></div>
-                    </div>
                     <div class="location-info" id="arrivalInfo"></div>
                 </div>
             </div>
