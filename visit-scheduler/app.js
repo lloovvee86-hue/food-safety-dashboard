@@ -597,22 +597,41 @@
         let totalDistance = 0;
         let totalTime = 0;
 
+        const waypointsEls = els.waypointsContainer.querySelectorAll('.waypoint-item');
+        const stayDurations = Array.from(waypointsEls).map(el => 
+            parseInt(el.querySelector('.stay-duration-input').value) || 0
+        );
+
+        let [depH, depM] = els.departureTimeInput.value.split(':').map(Number);
+        let currentTime = depH * 60 + depM;
+
         for (let i = 0; i < points.length - 1; i++) {
             const from = points[i];
             const to = points[i + 1];
             const dist = haversineDistance(from.lat, from.lng, to.lat, to.lng);
-            const time = Math.round(dist / 50 * 60);
+            const durMin = Math.round(dist / 50 * 60);
+
+            const depTime = `${String(Math.floor((currentTime % 1440) / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
+            const arrTime = `${String(Math.floor(((currentTime + durMin) % 1440) / 60)).padStart(2, '0')}:${String((currentTime + durMin) % 60).padStart(2, '0')}`;
 
             segments.push({
                 from: from.name,
                 to: to.name,
                 distance: dist,
-                time: time,
+                time: durMin,
+                depTime: depTime,
+                arrTime: arrTime,
                 majorRoads: [],
                 keyNodes: []
             });
             totalDistance += dist;
-            totalTime += time;
+            totalTime += durMin;
+
+            if (i < stayDurations.length) {
+                currentTime += durMin + stayDurations[i];
+            } else {
+                currentTime += durMin;
+            }
         }
 
         displayResults(segments, totalDistance, totalTime);
