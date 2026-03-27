@@ -523,7 +523,7 @@
             // Generate segments breakdown from sections
             const startTimeStr = els.departureTimeInput.value;
             let [h, m] = startTimeStr.split(':').map(Number);
-            let currentTime = h * 60 + m; // Total minutes from 00:00
+            let currentTime = Math.round((h * 60 + m) / 10) * 10;
 
             const waypointsEls = els.waypointsContainer.querySelectorAll('.waypoint-item');
             const stayDurations = Array.from(waypointsEls).map(el => 
@@ -537,10 +537,6 @@
             };
 
             const segments = route.sections.map((section, i) => {
-                const depTime = formatTime(currentTime);
-                const durMin = Math.round(section.duration / 60);
-                const arrTime = formatTime(currentTime + durMin);
-                
                 // Extract Major Roads Sequence (Optimized)
                 const roadSequence = [];
                 section.roads.forEach(r => {
@@ -561,23 +557,28 @@
                     .map(g => g.name);
                 const uniqueNodes = [...new Set(keyNodes)].slice(0, 4); // Limit to top 4 key points
 
+                const durMin = Math.round(section.duration / 60);
+                const roundedDur = Math.round(durMin / 10) * 10;
+
+                const depTime = `${String(Math.floor((currentTime % 1440) / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
+                const arrTime = `${String(Math.floor(((currentTime + roundedDur) % 1440) / 60)).padStart(2, '0')}:${String((currentTime + roundedDur) % 60).padStart(2, '0')}`;
+
                 const segment = {
                     from: points[i].name,
                     to: points[i+1].name,
                     distance: section.distance / 1000,
-                    time: durMin,
+                    time: durMin, // Raw for display
+                    roundedTime: roundedDur, // For calculation
                     depTime: depTime,
                     arrTime: arrTime,
                     majorRoads: roadSequence,
                     keyNodes: uniqueNodes
                 };
 
-                // Update currentTime for next segment (Arrival + Stay at destination of this segment)
-                if (i < stayDurations.length) {
-                    currentTime += durMin + stayDurations[i];
-                } else {
-                    currentTime += durMin;
-                }
+                // Update currentTime for next segment
+                const stayMin = i < stayDurations.length ? stayDurations[i] : 0;
+                const roundedStay = Math.round(stayMin / 10) * 10;
+                currentTime += roundedDur + roundedStay;
                 
                 return segment;
             });
@@ -603,22 +604,24 @@
         );
 
         let [depH, depM] = els.departureTimeInput.value.split(':').map(Number);
-        let currentTime = depH * 60 + depM;
+        let currentTime = Math.round((depH * 60 + depM) / 10) * 10;
 
         for (let i = 0; i < points.length - 1; i++) {
             const from = points[i];
             const to = points[i + 1];
             const dist = haversineDistance(from.lat, from.lng, to.lat, to.lng);
             const durMin = Math.round(dist / 50 * 60);
+            const roundedDur = Math.round(durMin / 10) * 10;
 
             const depTime = `${String(Math.floor((currentTime % 1440) / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
-            const arrTime = `${String(Math.floor(((currentTime + durMin) % 1440) / 60)).padStart(2, '0')}:${String((currentTime + durMin) % 60).padStart(2, '0')}`;
+            const arrTime = `${String(Math.floor(((currentTime + roundedDur) % 1440) / 60)).padStart(2, '0')}:${String((currentTime + roundedDur) % 60).padStart(2, '0')}`;
 
             segments.push({
                 from: from.name,
                 to: to.name,
                 distance: dist,
                 time: durMin,
+                roundedTime: roundedDur,
                 depTime: depTime,
                 arrTime: arrTime,
                 majorRoads: [],
@@ -627,11 +630,9 @@
             totalDistance += dist;
             totalTime += durMin;
 
-            if (i < stayDurations.length) {
-                currentTime += durMin + stayDurations[i];
-            } else {
-                currentTime += durMin;
-            }
+            const stayMin = i < stayDurations.length ? stayDurations[i] : 0;
+            const roundedStay = Math.round(stayMin / 10) * 10;
+            currentTime += roundedDur + roundedStay;
         }
 
         displayResults(segments, totalDistance, totalTime);
@@ -759,10 +760,11 @@
                 const point = allPoints[i + 1];
                 const id = point.id || `${point.lat}-${point.lng}`;
                 const stayMin = i < stayDurations.length ? stayDurations[i] : 0;
+                const roundedStay = Math.round(stayMin / 10) * 10;
                 
                 const startTime = seg.arrTime;
                 let [h, m] = startTime.split(':').map(Number);
-                let endMin = h * 60 + m + stayMin;
+                let endMin = h * 60 + m + roundedStay;
                 const endTime = `${String(Math.floor((endMin % 1440) / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
                 tableHtml += `
