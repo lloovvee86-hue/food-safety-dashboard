@@ -817,7 +817,12 @@
             // Removed: updateMemos()
 
         } catch (error) {
-            showToast(`❌ 길찾기 오류: ${error.message} (가상 경로로 대체합니다)`);
+            console.error('Route calculation error:', error);
+            let errMsg = error.message;
+            if (error instanceof TypeError && (errMsg.includes('fetch') || errMsg.includes('NetworkError'))) {
+                errMsg = '로컬 서버(server.py)가 실행되지 않았거나 연결할 수 없습니다. 실제 도로 기반 경로를 보려면 터미널에서 python server.py를 실행해주세요.';
+            }
+            showToast(`⚠️ ${errMsg} (지점 간 직선 경로를 표시합니다)`);
             fallbackCalculateRoute(points);
         }
     }
