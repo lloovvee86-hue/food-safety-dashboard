@@ -978,7 +978,7 @@
                     <td class="col-schedule">${seg.from} ~<br>${seg.to}</td>
                     <td class="col-duration">
                         <div class="dur-val">${seg.time} min</div>
-                        <div class="dist-val">(${seg.distance.toFixed(1)}km)</div>
+                        <div class="dist-val">(약 ${Math.ceil(seg.distance / 10) * 10}km)</div>
                         <div class="road-info">${(seg.majorRoads || []).map(r => r.name).join(' >> ')}</div>
                     </td>
                     <td class="col-remarks">
