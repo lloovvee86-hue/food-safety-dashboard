@@ -11,8 +11,8 @@
         apiKey: localStorage.getItem('kakao_js_key') || 'd83678527e52f4d753df486ac01f7d0c',
         apiSecret: localStorage.getItem('kakao_rest_key') || '007cb32ee7d003fec1bd6fc308b7ece7',
         departureTime: '09:00',
-        memos: {}, // { id: { title, content } }
-        lastSegments: [], // Store results for memo cards
+        contacts: {}, // { id: "text" }
+        lastSegments: [], 
         mapLoaded: false,
         map: null,
         markers: [],
@@ -898,7 +898,14 @@
                         <td class="col-schedule"><strong>${point.name}</strong></td>
                         <td class="col-duration">${stayMin} min</td>
                         <td class="col-remarks">
-                            <div class="remark-addr">📍 ${point.address || ''}</div>
+                            <div class="remark-addr">주소: ${point.address || ''}</div>
+                            <div class="remark-contact">
+                                <span>담당자: </span>
+                                <input type="text" class="input-contact" 
+                                    data-point-id="${id}" 
+                                    value="${state.contacts[id] || ''}" 
+                                    placeholder="성명/직함/연락처">
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -907,6 +914,15 @@
 
         tableHtml += `</tbody></table>`;
         els.itineraryContainer.innerHTML = tableHtml;
+
+        // Setup contact sync
+        els.itineraryContainer.querySelectorAll('.input-contact').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const id = e.target.dataset.pointId;
+                state.contacts[id] = e.target.value;
+            });
+        });
+
         showToast('✅ 비즈니스 일정표가 생성되었습니다!');
     }
 
