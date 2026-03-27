@@ -47,12 +47,10 @@
         optimizeBtn: $('#optimizeBtn'),
         departureTimeInput: $('#departureTime'),
         resetBtn: $('#resetBtn'),
-        resultPanel: $('#resultPanel'),
-        resultSummary: $('#resultSummary'),
-        resultSegments: $('#resultSegments'),
+        itineraryPanel: $('#itineraryPanel'),
+        itineraryContainer: $('#itineraryContainer'),
         mapPlaceholder: $('#mapPlaceholder'),
         mapContainer: $('#mapContainer'),
-        memosContainer: $('#memosContainer'),
         toast: $('#toast')
     };
 
@@ -81,7 +79,11 @@
         // Departure search
         setupSearch(els.departureInput, els.departureDropdown, (place) => {
             state.departure = place;
-            els.departureInput.value = place.name;
+            if (els.departureInput._setSearchValue) {
+                els.departureInput._setSearchValue(place.name);
+            } else {
+                els.departureInput.value = place.name;
+            }
             els.departureInput.classList.add('has-value');
             els.departureInfo.textContent = place.address;
             els.departureInfo.classList.add('has-info');
@@ -92,7 +94,11 @@
         // Arrival search
         setupSearch(els.arrivalInput, els.arrivalDropdown, (place) => {
             state.arrival = place;
-            els.arrivalInput.value = place.name;
+            if (els.arrivalInput._setSearchValue) {
+                els.arrivalInput._setSearchValue(place.name);
+            } else {
+                els.arrivalInput.value = place.name;
+            }
             els.arrivalInput.classList.add('has-value');
             els.arrivalInfo.textContent = place.address;
             els.arrivalInfo.classList.add('has-info');
@@ -238,14 +244,27 @@
     // ===== Search =====
     function setupSearch(input, dropdown, onSelect) {
         let debounceTimer;
+        let lastValue = input.value;
+
+        // Expose a way to update lastValue when selection is made programmatically
+        input._setSearchValue = (val) => {
+            lastValue = val;
+            input.value = val;
+        };
+
         input.addEventListener('input', () => {
             const query = input.value.trim();
+            if (query === lastValue) return; 
+            
             if (query.length < 2) {
                 dropdown.classList.remove('active');
                 return;
             }
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => searchPlaces(query, dropdown, onSelect), 300);
+            debounceTimer = setTimeout(() => {
+                lastValue = query;
+                searchPlaces(query, dropdown, onSelect);
+            }, 300);
         });
 
         input.addEventListener('focus', () => {
@@ -348,8 +367,11 @@
             <div class="dropdown-item-address">${place.address}</div>
             ${place.category ? `<div class="dropdown-item-category">${place.category}</div>` : ''}
         `;
-        div.addEventListener('click', () => {
+        div.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent global click listener from interfering
             onSelect(place);
+            dropdown.innerHTML = '';
             dropdown.classList.remove('active');
         });
         return div;
@@ -403,7 +425,13 @@
             wpData.address = place.address;
             wpData.lat = place.lat;
             wpData.lng = place.lng;
-            wpInput.value = place.name;
+            
+            if (wpInput._setSearchValue) {
+                wpInput._setSearchValue(place.name);
+            } else {
+                wpInput.value = place.name;
+            }
+            
             wpInput.classList.add('has-value');
             wpInfo.textContent = place.address;
             wpInfo.classList.add('has-info');
@@ -446,87 +474,9 @@
         const hasArrival = state.arrival !== null;
         els.calcRouteBtn.disabled = !(hasDeparture && hasArrival);
         els.optimizeBtn.disabled = !(hasDeparture && hasArrival && state.waypoints.length >= 2);
-        updateMemos();
     }
 
-    // ===== Memos =====
-    function updateMemos() {
-        const container = els.memosContainer;
-        const allPoints = getAllPoints();
-        
-        if (allPoints.length === 0) {
-            container.innerHTML = `
-                <div class="memo-empty">
-                    <div class="memo-empty-icon">✍️</div>
-                    <p>장소를 선택하시면<br>메모를 작성할 수 있습니다.</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = '';
-        allPoints.forEach((point, i) => {
-            const id = point.id || (i === 0 ? 'departure' : 'arrival');
-            if (!state.memos[id]) {
-                state.memos[id] = { title: '', content: '' };
-            }
-            
-            const card = document.createElement('div');
-            card.className = 'memo-card';
-            
-            // Find timing/road info for this point if available
-            let arrivalInfo = '';
-            let roadBadges = '';
-            if (state.lastSegments.length > 0) {
-                if (i === 0) {
-                    arrivalInfo = `<span class="memo-arrival" style="color:var(--accent-green)">출발: ${els.departureTimeInput.value}</span>`;
-                } else {
-                    const seg = state.lastSegments[i - 1];
-                    if (seg) {
-                        arrivalInfo = `<span class="memo-arrival" style="color:var(--accent-blue)">도착: ${seg.arrTime}</span>`;
-                        roadBadges = `<div class="memo-road-sequence">
-                            ${(seg.majorRoads || []).map((r, ri) => `
-                                <span class="road-item ${r.type === 'express' ? 'express' : ''}">${r.name}</span>
-                                ${ri < seg.majorRoads.length - 1 ? '<span class="road-sep">>></span>' : ''}
-                            `).join('')}
-                        </div>`;
-                    }
-                }
-            }
-
-            card.innerHTML = `
-                <div class="memo-card-header">
-                    <div class="memo-card-icon" style="background:${i === 0 ? 'var(--accent-green)' : (i === allPoints.length - 1 ? 'var(--accent-red)' : 'var(--accent-blue)')}"></div>
-                    <div class="memo-card-title-group">
-                        <div class="memo-card-title">${point.name || (i === 0 ? '출발지' : (i === allPoints.length - 1 ? '도착지' : '경유지 ' + i))}</div>
-                        ${arrivalInfo}
-                    </div>
-                </div>
-                ${roadBadges}
-                <div class="memo-field">
-                    <label>메모 제목</label>
-                    <input type="text" class="memo-input" placeholder="업무 제목을 입력하세요" value="${state.memos[id].title}">
-                </div>
-                <div class="memo-field">
-                    <label>상세 내용</label>
-                    <textarea class="memo-content-input" placeholder="상세 내용을 입력하세요">${state.memos[id].content}</textarea>
-                </div>
-            `;
-            
-            // Update state and Table when input changes
-            card.querySelector('.memo-title-input').addEventListener('input', (e) => {
-                state.memos[id].title = e.target.value;
-                syncMemoToTable(id, 'title', e.target.value);
-            });
-
-            card.querySelector('.memo-content-input').addEventListener('input', (e) => {
-                state.memos[id].content = e.target.value;
-                syncMemoToTable(id, 'content', e.target.value);
-            });
-            
-            container.appendChild(card);
-        });
-    }
+    // updateMemos() removed as Visit Details panel is replaced by Itinerary
 
     // ===== Route Calculation =====
     async function calculateRoute() {
@@ -650,7 +600,7 @@
 
             displayResults(segments, totalDistance, totalTime);
             state.lastSegments = segments;
-            updateMemos();
+            // Removed: updateMemos()
 
         } catch (error) {
             showToast(`❌ 길찾기 오류: ${error.message} (가상 경로로 대체합니다)`);
@@ -746,23 +696,7 @@
     }
 
     function displayResults(segments, totalDistance, totalTime) {
-        if (!els.resultPanel || !els.resultSegments) return;
-
-        // Header Summary
-        els.resultSummary.innerHTML = `
-            <div class="summary-item">
-                <span class="summary-label">총 거리</span>
-                <span class="summary-value">${totalDistance.toFixed(1)}km</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">총 소요시간</span>
-                <span class="summary-value">${Math.floor(totalTime / 60)}h ${totalTime % 60}m</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">방문처</span>
-                <span class="summary-value">${state.waypoints.filter(w => w.lat).length + 1}곳</span>
-            </div>
-        `;
+        if (!els.itineraryContainer) return;
 
         const allPoints = getAllPoints();
         const waypointsEls = els.waypointsContainer.querySelectorAll('.waypoint-item');
@@ -776,16 +710,23 @@
         const dayStr = ['일','월','화','수','목','금','토'][now.getDay()];
 
         let tableHtml = `
-            <div class="itinerary-title-bar">
-                1. 현장방문 세부계획 (${dateStr}(${dayStr}) ${els.departureTimeInput.value} ~ )
+            <div class="itinerary-summary" style="padding:1rem; background:rgba(255,255,255,0.05); border-radius:12px; margin-bottom:1rem; font-size:0.85rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                    <span style="color:#8b8fa3">총 거리:</span>
+                    <span style="font-weight:700; color:var(--accent-green)">${totalDistance.toFixed(1)}km</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#8b8fa3">총 소요시간:</span>
+                    <span style="font-weight:700; color:var(--accent-blue)">${Math.floor(totalTime / 60)}시간 ${totalTime % 60}분</span>
+                </div>
             </div>
             <table class="itinerary-table">
                 <thead>
                     <tr>
-                        <th style="width: 15%;">시 간</th>
-                        <th style="width: 25%;">일 정</th>
-                        <th style="width: 15%;">소요시간</th>
-                        <th style="width: 45%;">비 고</th>
+                        <th style="width: 75px;">시간</th>
+                        <th>일정</th>
+                        <th style="width: 70px; text-align:center;">소요</th>
+                        <th>상세정보</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -799,7 +740,7 @@
                     <td class="col-schedule">${seg.from} ~<br>${seg.to}</td>
                     <td class="col-duration">
                         <div class="dur-val">${seg.time} min</div>
-                        <div class="dist-val">(약 ${seg.distance.toFixed(1)} km)</div>
+                        <div class="dist-val">(${seg.distance.toFixed(1)}km)</div>
                         <div class="road-info">${(seg.majorRoads || []).map(r => r.name).join(' >> ')}</div>
                     </td>
                     <td class="col-remarks">
@@ -816,16 +757,10 @@
                 const id = point.id || `${point.lat}-${point.lng}`;
                 const stayMin = i < stayDurations.length ? stayDurations[i] : 0;
                 
-                const memo = state.memos[id] || { title: '', content: '' };
                 const startTime = seg.arrTime;
-                
                 let [h, m] = startTime.split(':').map(Number);
                 let endMin = h * 60 + m + stayMin;
                 const endTime = `${String(Math.floor((endMin % 1440) / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
-
-                // Filter out placeholder text
-                const mTitle = (memo.title && memo.title !== '업무 제목을 입력하세요') ? memo.title : '';
-                const mContent = (memo.content && memo.content !== '상세 내용을 입력하세요') ? memo.content : '';
 
                 tableHtml += `
                     <tr class="row-stay" data-point-id="${id}">
@@ -834,65 +769,18 @@
                         <td class="col-duration">${stayMin} min</td>
                         <td class="col-remarks">
                             <div class="remark-addr">📍 ${point.address || ''}</div>
-                            ${mTitle ? `<div class="remark-title">📌 ${mTitle}</div>` : ''}
-                            ${mContent ? `<div class="remark-content">${mContent}</div>` : ''}
                         </td>
                     </tr>
                 `;
             }
         });
 
-        tableHtml += `
-                </tbody>
-            </table>
-        `;
-
-        els.resultSegments.innerHTML = tableHtml;
-        els.resultPanel.classList.add('visible');
-        showToast('✅ 주행 일정이 비즈니스 보고서 형태로 업데이트되었습니다!');
+        tableHtml += `</tbody></table>`;
+        els.itineraryContainer.innerHTML = tableHtml;
+        showToast('✅ 비즈니스 일정표가 생성되었습니다!');
     }
 
-    /**
-     * Real-time sync from Memo Panel to Itinerary Table
-     */
-    function syncMemoToTable(id, type, value) {
-        const table = els.resultSegments.querySelector('.itinerary-table');
-        if (!table) return;
-
-        // Find the stay row for this point
-        // We use data attributes to find the correct cell
-        const rows = table.querySelectorAll('.row-stay');
-        rows.forEach(row => {
-            if (row.dataset.pointId === id) {
-                const remarksCell = row.querySelector('.col-remarks');
-                if (type === 'title') {
-                    let titleEl = remarksCell.querySelector('.remark-title');
-                    if (value && value !== '업무 제목을 입력하세요') {
-                        if (!titleEl) {
-                            titleEl = document.createElement('div');
-                            titleEl.className = 'remark-title';
-                            remarksCell.appendChild(titleEl);
-                        }
-                        titleEl.textContent = '📌 ' + value;
-                    } else if (titleEl) {
-                        titleEl.remove();
-                    }
-                } else if (type === 'content') {
-                    let contentEl = remarksCell.querySelector('.remark-content');
-                    if (value && value !== '상세 내용을 입력하세요') {
-                        if (!contentEl) {
-                            contentEl = document.createElement('div');
-                            contentEl.className = 'remark-content';
-                            remarksCell.appendChild(contentEl);
-                        }
-                        contentEl.textContent = value;
-                    } else if (contentEl) {
-                        contentEl.remove();
-                    }
-                }
-            }
-        });
-    }
+    // Removed: syncMemoToTable() - No longer needed without memo inputs
 
     function formatTime(minutes) {
         if (minutes < 60) return `${minutes}분`;
@@ -1021,7 +909,12 @@
         els.arrivalInfo.classList.remove('has-info');
 
         els.waypointsContainer.innerHTML = '';
-        els.resultPanel.classList.remove('visible');
+        els.itineraryContainer.innerHTML = `
+            <div class="itinerary-empty">
+                <div class="itinerary-empty-icon">📊</div>
+                <p>경로를 계산하시면<br>상세 일정표가 여기에 표시됩니다.</p>
+            </div>
+        `;
 
         updateButtonStates();
         clearMapObjects();

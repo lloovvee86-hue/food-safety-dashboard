@@ -1,15 +1,19 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import os
 
-app = Flask(__name__)
-# Enable CORS for the frontend port (e.g., 5500 if using Live Server)
+app = Flask(__name__, static_folder='.', static_url_path='')
+# Enable CORS for the frontend
 CORS(app)
 
 # Store API credentials (you can switch these to env vars later)
 KAKAO_JS_KEY = os.environ.get('KAKAO_JS_KEY', 'd83678527e52f4d753df486ac01f7d0c')
 KAKAO_REST_KEY = os.environ.get('KAKAO_REST_KEY', '007cb32ee7d003fec1bd6fc308b7ece7')
+
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/directions', methods=['GET'])
 def get_directions():
@@ -75,5 +79,5 @@ def search_places():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print("Starting Visit Scheduler API Proxy Server on port 5000...")
+    print("Starting Visit Scheduler API Proxy Server on http://127.0.0.1:5000")
     app.run(port=5000, debug=True)
