@@ -386,7 +386,7 @@
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <div class="time-input-wrapper">
                             <span>체류:</span>
-                            <input type="number" class="stay-duration-input" value="30" min="0" step="10">
+                            <input type="number" class="stay-duration-input" value="60" min="0" step="10">
                             <span>분</span>
                         </div>
                         <button class="btn-remove-waypoint" data-id="${id}" title="삭제">✕</button>
