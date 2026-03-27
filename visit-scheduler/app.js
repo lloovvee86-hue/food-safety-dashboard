@@ -60,6 +60,7 @@
     function init() {
         setupEventListeners();
         initDragAndDrop();
+        initCopy();
         if (state.apiKey) {
             hideModal();
             loadKakaoMapScript();
@@ -448,6 +449,102 @@
             updateButtonStates();
             updateMap();
         }, 200);
+    }
+
+    function initCopy() {
+        const copyBtn = $('#copyItineraryBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', copyItineraryToClipboard);
+        }
+    }
+
+    async function copyItineraryToClipboard() {
+        const container = els.itineraryContainer;
+        const table = container.querySelector('table');
+        if (!table) {
+            showToast('❌ 복사할 일정표가 없습니다.');
+            return;
+        }
+
+        // Clone table to manipulate
+        const clone = table.cloneNode(true);
+        
+        // Inline some styles for Excel
+        clone.style.borderCollapse = 'collapse';
+        clone.style.width = '100%';
+        clone.style.fontFamily = 'sans-serif';
+
+        // Process cells
+        clone.querySelectorAll('th, td').forEach(cell => {
+            cell.style.border = '1px solid #dddddd';
+            cell.style.padding = '8px';
+            cell.style.fontSize = '12px';
+            
+            // Handle inputs/textareas
+            const inputs = cell.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                const span = document.createElement('span');
+                // For contact input, add the "담당자: " prefix if it's missing in the value
+                if (input.classList.contains('input-contact')) {
+                    span.textContent = '담당자: ' + input.value;
+                } else {
+                    span.textContent = input.value;
+                }
+                input.parentNode.replaceChild(span, input);
+            });
+
+            // Remove purely decorative or interactive elements
+            cell.querySelectorAll('button, .marker-line, .marker-dot').forEach(el => el.remove());
+            
+            // Clean up internal wrappers
+            cell.querySelectorAll('.break-input-wrapper').forEach(w => {
+                // Keep the text info
+                const val = parseInt(w.querySelector('input')?.value) || 0;
+                const text = val > 0 ? ` (추가 정지: ${val}분)` : '';
+                w.textContent = text;
+            });
+        });
+
+        // Generate cleaned HTML string
+        const html = clone.outerHTML;
+        
+        // Generate plain text version from the CLEANED CLONE
+        let plainText = "";
+        clone.querySelectorAll('tr').forEach(tr => {
+            const cells = Array.from(tr.querySelectorAll('th, td')).map(c => {
+                return c.innerText.replace(/\n/g, " ").trim();
+            });
+            plainText += cells.join("\t") + "\n";
+        });
+
+        try {
+            const blobHtml = new Blob([html], { type: 'text/html' });
+            const blobText = new Blob([plainText], { type: 'text/plain' });
+            const data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
+            
+            await navigator.clipboard.write(data);
+            showToast('📋 일정표가 클립보드에 복사되었습니다! (엑셀에 붙여넣기 가능)');
+            
+            // Visual feedback on button
+            const btn = $('#copyItineraryBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '✅ 복사됨';
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+            }, 2000);
+            
+        } catch (err) {
+            console.error('Copy failed', err);
+            // Fallback for some browsers
+            try {
+                await navigator.clipboard.writeText(plainText);
+                showToast('📋 텍스트 레이아웃으로 복사되었습니다.');
+            } catch (e) {
+                showToast('❌ 복사 실패: 브라우저 권한을 확인해주세요.');
+            }
+        }
     }
 
     function renumberWaypoints() {

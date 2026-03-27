@@ -60,6 +60,37 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
 .btn-secondary:hover { color:var(--text-primary); border-color:var(--text-secondary); }
 .btn-ghost { background:transparent; color:var(--text-secondary); border:none; padding:0.4rem 0.8rem; border-radius:var(--radius-sm); font-family:var(--font); font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:0.3rem; transition:all var(--transition-fast); }
 .btn-ghost:hover { color:var(--text-primary); background:var(--bg-glass); }
+
+.btn-copy {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-light);
+    color: var(--accent-blue);
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all var(--transition-fast);
+}
+
+.btn-copy:hover {
+    color: #fff;
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-copy svg {
+    transition: transform 0.2s;
+}
+
+.btn-copy:active svg {
+    transform: scale(0.9);
+}
 .btn-icon { background:var(--bg-glass); border:1px solid var(--border-subtle); color:var(--text-secondary); width:36px; height:36px; border-radius:var(--radius-sm); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all var(--transition-fast); }
 .btn-icon:hover { color:var(--text-primary); border-color:var(--border-light); }
 
