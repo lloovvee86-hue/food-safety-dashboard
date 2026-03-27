@@ -41,7 +41,7 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
 /* Modal */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:1; transition:opacity var(--transition-base); }
 .modal-overlay.hidden { opacity:0; pointer-events:none; }
-.modal-card { background:var(--bg-secondary); border:1px solid var(--border-light); border-radius:var(--radius-xl); padding:2.5rem; max-width:440px; width:90%; text-align:center; box-shadow:var(--shadow-lg); transform:translateY(0); transition:transform var(--transition-base); }
+.modal-card { position:relative; background:var(--bg-secondary); border:1px solid var(--border-light); border-radius:var(--radius-xl); padding:2.5rem; max-width:440px; width:90%; text-align:center; box-shadow:var(--shadow-lg); transform:translateY(0); transition:transform var(--transition-base); }
 .modal-overlay.hidden .modal-card { transform:translateY(20px); }
 .modal-icon { font-size:3rem; margin-bottom:1rem; }
 .modal-card h2 { font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; }
@@ -52,6 +52,31 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
 .modal-actions { display:flex; flex-direction:column; gap:0.7rem; margin-bottom:1.2rem; }
 .modal-hint { font-size:0.8rem!important; color:var(--text-muted)!important; margin-bottom:0!important; }
 .modal-hint a { color:var(--accent-green); text-decoration:none; }
+
+.btn-close-modal {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 8px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.btn-close-modal:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+    transform: rotate(90deg);
+}
 
 /* Buttons */
 .btn-primary { background:var(--gradient-green); color:#fff; border:none; padding:0.85rem 1.5rem; border-radius:var(--radius-md); font-family:var(--font); font-size:0.95rem; font-weight:600; cursor:pointer; transition:all var(--transition-fast); box-shadow:var(--shadow-green); }

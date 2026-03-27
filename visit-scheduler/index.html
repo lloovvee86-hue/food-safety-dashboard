@@ -18,6 +18,7 @@
     <!-- API Key Modal -->
     <div id="apiKeyModal" class="modal-overlay">
         <div class="modal-card">
+            <button class="btn-close-modal" onclick="document.getElementById('apiKeyModal').classList.add('hidden')" aria-label="닫기">✕</button>
             <div class="modal-icon">🔑</div>
             <h2>카카오 지도 API 설정</h2>
             <p>카카오 개발자 센터에서 발급받은 키를 입력해주세요.</p>
@@ -39,6 +40,7 @@
     <!-- Admin Password Modal -->
     <div id="passwordModal" class="modal-overlay hidden">
         <div class="modal-card">
+            <button class="btn-close-modal" onclick="document.getElementById('passwordModal').classList.add('hidden')" aria-label="닫기">✕</button>
             <div class="modal-icon">🔒</div>
             <h2>관리자 인증</h2>
             <p>API 설정을 변경하려면 비밀번호를 입력하세요.</p>
