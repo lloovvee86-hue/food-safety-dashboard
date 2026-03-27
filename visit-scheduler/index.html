@@ -15,6 +15,7 @@
 
 <body>
     <!-- API Key Modal -->
+    <!-- API Key Modal -->
     <div id="apiKeyModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-icon">🔑</div>
@@ -32,6 +33,22 @@
             <p class="modal-hint">💡 <a href="https://developers.kakao.com/" target="_blank">카카오 개발자 센터</a>에서 무료로 발급
                 가능합니다.
             </p>
+        </div>
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div id="passwordModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-icon">🔒</div>
+            <h2>관리자 인증</h2>
+            <p>API 설정을 변경하려면 비밀번호를 입력하세요.</p>
+            <div class="modal-input-group">
+                <input type="password" id="adminPasswordInput" placeholder="비밀번호 입력" autocomplete="off">
+            </div>
+            <div class="modal-actions">
+                <button id="verifyPasswordBtn" class="btn-primary">확인</button>
+                <button id="closePasswordBtn" class="btn-secondary">취소</button>
+            </div>
         </div>
     </div>
 

@@ -53,6 +53,10 @@
         itineraryContainer: $('#itineraryContainer'),
         mapPlaceholder: $('#mapPlaceholder'),
         mapContainer: $('#mapContainer'),
+        passwordModal: $('#passwordModal'),
+        adminPasswordInput: $('#adminPasswordInput'),
+        verifyPasswordBtn: $('#verifyPasswordBtn'),
+        closePasswordBtn: $('#closePasswordBtn'),
         toast: $('#toast')
     };
 
@@ -74,7 +78,15 @@
             hideModal();
             showToast('🗺️ 데모 모드로 실행합니다. 경유지 추가/삭제를 테스트해보세요!');
         });
-        els.apiKeySettingBtn.addEventListener('click', showModal);
+        els.apiKeySettingBtn.addEventListener('click', showPasswordModal);
+        els.verifyPasswordBtn.addEventListener('click', verifyAdminPassword);
+        els.closePasswordBtn.addEventListener('click', hidePasswordModal);
+        
+        // Keydown support for password input
+        els.adminPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') verifyAdminPassword();
+        });
+
         els.addWaypointBtn.addEventListener('click', addWaypoint);
         els.calcRouteBtn.addEventListener('click', calculateRoute);
         els.optimizeBtn.addEventListener('click', optimizeRoute);
@@ -135,6 +147,10 @@
         }
     }
 
+    function hideModal() {
+        els.apiKeyModal.classList.add('hidden');
+    }
+
     function showModal() {
         els.apiKeyModal.classList.remove('hidden');
         els.apiKeyInput.value = state.apiKey;
@@ -142,8 +158,27 @@
         setTimeout(() => els.apiKeyInput.focus(), 300);
     }
 
-    function hideModal() {
-        els.apiKeyModal.classList.add('hidden');
+    // ===== Admin Password =====
+    function showPasswordModal() {
+        els.passwordModal.classList.remove('hidden');
+        els.adminPasswordInput.value = '';
+        setTimeout(() => els.adminPasswordInput.focus(), 300);
+    }
+
+    function hidePasswordModal() {
+        els.passwordModal.classList.add('hidden');
+    }
+
+    function verifyAdminPassword() {
+        const pw = els.adminPasswordInput.value;
+        if (pw === 'pmo1234!') {
+            hidePasswordModal();
+            showModal();
+        } else {
+            showToast('❌ 비밀번호가 틀렸습니다.');
+            els.adminPasswordInput.value = '';
+            els.adminPasswordInput.focus();
+        }
     }
 
     // ===== Kakao Map =====
