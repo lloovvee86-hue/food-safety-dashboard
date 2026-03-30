@@ -98,6 +98,23 @@ def search_places():
                 'category_group_name': '주소/건물'
             })
             
+        # 3. Business Suffix Fallback (if still no results)
+        if not documents:
+            first_word = query.split()[0]
+            suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류']
+            for suffix in suffixes:
+                if len(documents) >= 5: break
+                s_query = f"{first_word} {suffix}"
+                s_res = requests.get(keyword_url, params={'query': s_query}, headers=headers)
+                s_data = s_res.json()
+                
+                other_parts = query.split()[1:]
+                for doc in s_data.get('documents', []):
+                    full_text = (doc['place_name'] + ' ' + doc['address_name'] + ' ' + doc.get('road_address_name', '')).lower()
+                    if all(p.lower() in full_text for p in other_parts):
+                        if not any(d['x'] == doc['x'] and d['y'] == doc['y'] for d in documents):
+                            documents.append(doc)
+
         return jsonify({'documents': documents, 'meta': {'total_count': len(documents)}}), 200
         
     except Exception as e:

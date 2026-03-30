@@ -422,6 +422,37 @@
             }
         }
 
+        // 5. Stage 5: Business Suffix Fallback (for factories/offices missed by standard keywords)
+        if (allResults.length === 0) {
+            const firstWord = query.split(/\s+/)[0];
+            const suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류'];
+            
+            for (const suffix of suffixes) {
+                if (allResults.length >= 3) break;
+                const suffixQuery = `${firstWord} ${suffix}`;
+                const suffixData = await kSearch(suffixQuery, { useMapBounds: false });
+                
+                // Filter by the rest of the original query parts if applicable
+                const originalParts = query.split(/\s+/).slice(1);
+                const filtered = suffixData.filter(item => {
+                    const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
+                    return originalParts.every(p => fullText.includes(p.toLowerCase()));
+                });
+
+                filtered.forEach(item => {
+                    if (!allResults.some(r => r.lat === parseFloat(item.y) && r.lng === parseFloat(item.x))) {
+                        allResults.push({
+                            name: item.place_name,
+                            address: item.road_address_name || item.address_name,
+                            lat: parseFloat(item.y),
+                            lng: parseFloat(item.x),
+                            category: item.category_group_name
+                        });
+                    }
+                });
+            }
+        }
+
         // 5. Render Results
         dropdown.innerHTML = '';
         if (allResults.length > 0) {
