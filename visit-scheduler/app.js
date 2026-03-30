@@ -315,12 +315,36 @@
     }
 
     async function searchPlaces(query, dropdown, onSelect) {
+        console.log(`[Search] Query: "${query}"`);
         // 0. Initial Loading State
         dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중...</div>';
         dropdown.classList.add('active');
 
         let allResults = [];
+        const seenKeys = new Set();
         
+        const addUniqueResults = (data, sourceType) => {
+            let addedCount = 0;
+            data.forEach(item => {
+                const lat = parseFloat(item.y || item.lat);
+                const lng = parseFloat(item.x || item.lng);
+                const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    allResults.push({
+                        name: item.place_name || item.address_name || item.name,
+                        address: item.road_address_name || item.address_name || item.address,
+                        lat,
+                        lng,
+                        category: item.category_group_name || item.category || '기타',
+                        source: sourceType
+                    });
+                    addedCount++;
+                }
+            });
+            if (addedCount > 0) console.log(`[Search] Added ${addedCount} results from ${sourceType}`);
+        };
+
         // Helper to perform keyword search via SDK
         const kSearch = (q, options = {}) => new Promise(resolve => {
             if (!window.kakao || !kakao.maps || !kakao.maps.services) return resolve([]);
@@ -328,7 +352,7 @@
             ps.keywordSearch(q, (data, status) => {
                 if (status === kakao.maps.services.Status.OK) resolve(data);
                 else resolve([]);
-            }, options);
+            }, { size: 15, ...options });
         });
 
         // Helper to perform address search via SDK
@@ -341,141 +365,88 @@
             });
         });
 
-        // --- Accumulate Results through Stages ---
+        // --- Parallel Execution of Stages ---
+        const stages = [];
 
-        // 1. Stage 1: Standard Keyword Search
-        const keywordData = await kSearch(query);
-        keywordData.forEach(item => {
-            allResults.push({
-                name: item.place_name,
-                address: item.road_address_name || item.address_name,
-                lat: parseFloat(item.y),
-                lng: parseFloat(item.x),
-                category: item.category_group_name
-            });
-        });
+        // Stage 1: Basic Keyword
+        stages.push(kSearch(query).then(data => addUniqueResults(data, 'Keyword')));
 
-        // 2. Stage 2: Address Search Fallback (Continue if results < 5)
-        if (allResults.length < 5) {
-            const addressData = await aSearch(query);
-            addressData.forEach(item => {
-                if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
-                    allResults.push({
-                        name: item.address_name,
-                        address: item.road_address_name || item.address_name,
-                        lat: parseFloat(item.y),
-                        lng: parseFloat(item.x),
-                        category: '주소/건물'
-                    });
-                }
-            });
-        }
+        // Stage 2: Address Search
+        stages.push(aSearch(query).then(data => addUniqueResults(data, 'Address')));
 
-        // 3. Stage 3: Query Splitting Fallback (Continue if results < 5)
-        if (allResults.length < 5 && query.includes(' ')) {
+        // Stage 3: Split Search (if multi-word)
+        if (query.trim().includes(' ')) {
             const parts = query.split(/\s+/).filter(p => p.length > 0);
-            if (parts.length >= 2) {
-                for (const part of parts) {
-                    if (allResults.length >= 8) break; 
-                    const wordData = await kSearch(part, { useMapBounds: false });
+            parts.forEach(part => {
+                stages.push(kSearch(part, { useMapBounds: false }).then(data => {
                     const others = parts.filter(p => p !== part);
-                    const filtered = wordData.filter(item => {
+                    const filtered = data.filter(item => {
                         const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
                         return others.every(p => fullText.includes(p.toLowerCase()));
                     });
-
-                    filtered.forEach(item => {
-                        if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
-                            allResults.push({
-                                name: item.place_name,
-                                address: item.road_address_name || item.address_name,
-                                lat: parseFloat(item.y),
-                                lng: parseFloat(item.x),
-                                category: item.category_group_name
-                            });
-                        }
-                    });
-                }
-            }
+                    addUniqueResults(filtered, `Split(${part})`);
+                }));
+            });
         }
 
-        // 4. Stage 4: Backend REST API Fallback (Continue if results < 5)
-        if (allResults.length < 5) {
-            try {
-                const response = await fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`);
-                if (response.ok) {
-                    const restData = await response.json();
-                    if (restData.documents && restData.documents.length > 0) {
-                        restData.documents.forEach(item => {
-                            if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
-                                allResults.push({
-                                    name: item.place_name,
-                                    address: item.road_address_name || item.address_name,
-                                    lat: parseFloat(item.y),
-                                    lng: parseFloat(item.x),
-                                    category: item.category_group_name
-                                });
-                            }
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn('REST fallback search failed', err);
-            }
-        }
-
-        // 5. Stage 5: Business Suffix Fallback (Aggressive Search for enterprises)
-        // Use Stage 5 even if we have some results (if count < 5)
-        if (allResults.length < 5) {
-            const firstWord = query.split(/\s+/)[0];
-            const suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류', '센터'];
-            
-            for (const suffix of suffixes) {
-                if (allResults.length >= 10) break;
-                const suffixQuery = `${firstWord} ${suffix}`;
-                const suffixData = await kSearch(suffixQuery, { useMapBounds: false });
-                
+        // Stage 4: Business Suffixes (Aggressive)
+        const firstWord = query.split(/\s+/)[0];
+        const suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류', '센터'];
+        suffixes.forEach(suffix => {
+            const suffixQuery = `${firstWord} ${suffix}`;
+            stages.push(kSearch(suffixQuery, { useMapBounds: false }).then(data => {
                 const originalParts = query.split(/\s+/).slice(1);
-                const filtered = suffixData.filter(item => {
+                const filtered = data.filter(item => {
                     const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
                     return originalParts.every(p => fullText.includes(p.toLowerCase()));
                 });
+                addUniqueResults(filtered, `Suffix(${suffix})`);
+            }));
+        });
 
-                filtered.forEach(item => {
-                    if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
-                        allResults.push({
-                            name: item.place_name,
-                            address: item.road_address_name || item.address_name,
-                            lat: parseFloat(item.y),
-                            lng: parseFloat(item.x),
-                            category: item.category_group_name
-                        });
-                    }
-                });
-            }
-        }
+        // Wait for all stages (with a timeout to ensure responsiveness)
+        await Promise.race([
+            Promise.all(stages),
+            new Promise(resolve => setTimeout(resolve, 3000)) // Max 3s wait
+        ]);
+
+        console.log(`[Search] Total Unique Results: ${allResults.length}`);
 
         // 5. Render Results
         dropdown.innerHTML = '';
         if (allResults.length > 0) {
-            // Remove duplicates based on lat/lng (with slight tolerance)
-            const uniqueResults = [];
-            const seen = new Set();
-            allResults.forEach(p => {
-                const key = `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    uniqueResults.push(p);
-                }
+            // Priority: Exact name match first
+            allResults.sort((a, b) => {
+                const aExact = a.name === query;
+                const bExact = b.name === query;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                return 0;
             });
 
-            uniqueResults.forEach(place => {
+            allResults.slice(0, 15).forEach(place => {
                 const div = createDropdownItem(place, onSelect, dropdown);
                 dropdown.appendChild(div);
             });
             dropdown.classList.add('active');
         } else {
-            // 6. Final Fallback to Demo if all else fails
+            // 6. Last resort: Backend API
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`);
+                if (response.ok) {
+                    const restData = await response.json();
+                    if (restData.documents && restData.documents.length > 0) {
+                        addUniqueResults(restData.documents, 'REST');
+                        if (allResults.length > 0) {
+                            dropdown.innerHTML = '';
+                            allResults.forEach(place => dropdown.appendChild(createDropdownItem(place, onSelect, dropdown)));
+                            dropdown.classList.add('active');
+                            return;
+                        }
+                    }
+                }
+            } catch (err) {}
+            
             showDemoResults(query, dropdown, onSelect, true);
         }
     }
