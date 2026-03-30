@@ -12,6 +12,7 @@
         apiSecret: localStorage.getItem('kakao_rest_key') || '007cb32ee7d003fec1bd6fc308b7ece7',
         departureTime: '09:00',
         contacts: {}, // { id: "text" }
+        customNames: {}, // { id: "custom display name" }
         segmentBreaks: {}, // { "fromName-toName": minutes }
         segmentRemarks: {}, // { "fromName-toName": text }
         lastSegments: [], 
@@ -1069,7 +1070,7 @@
             tableHtml += `
                 <tr class="row-travel">
                     <td class="col-time">${seg.depTime} ~<br>${seg.arrTime}</td>
-                    <td class="col-schedule">${seg.from} ~<br>${seg.to}</td>
+                    <td class="col-schedule"><span class="travel-stop-label" data-point-id="${allPoints[i] ? (allPoints[i].id || allPoints[i].lat+'-'+allPoints[i].lng) : ''}">${state.customNames[allPoints[i] ? (allPoints[i].id || allPoints[i].lat+'-'+allPoints[i].lng) : ''] || seg.from}</span> ~<br><span class="travel-stop-label" data-point-id="${allPoints[i+1] ? (allPoints[i+1].id || allPoints[i+1].lat+'-'+allPoints[i+1].lng) : ''}">${state.customNames[allPoints[i+1] ? (allPoints[i+1].id || allPoints[i+1].lat+'-'+allPoints[i+1].lng) : ''] || seg.to}</span></td>
                     <td class="col-duration">
                         <div class="dur-val">${seg.time} min</div>
                         <div class="dist-val">(약 ${Math.ceil(seg.distance / 10) * 10}km)</div>
@@ -1112,7 +1113,14 @@
                 tableHtml += `
                     <tr class="row-stay" data-point-id="${id}">
                         <td class="col-time">${startTime} ~<br>${endTime}</td>
-                        <td class="col-schedule"><strong>${point.name}</strong></td>
+                        <td class="col-schedule">
+                            <input type="text" class="input-stop-name" 
+                                data-point-id="${id}"
+                                value="${state.customNames[id] || point.name}" 
+                                style="font-weight:700; background:transparent; border:1px solid transparent; color:inherit; width:100%; padding:2px 4px; border-radius:4px; font-size:inherit; transition:border-color 0.2s;"
+                                onfocus="this.style.borderColor='var(--accent-green)'"
+                                onblur="this.style.borderColor='transparent'">
+                        </td>
                         <td class="col-duration">${stayMin} min</td>
                         <td class="col-remarks">
                             <div class="remark-addr">주소: ${point.address || ''}</div>
@@ -1158,7 +1166,20 @@
             });
         });
 
-        showToast('✅ 비즈니스 일정표가 생성되었습니다!');
+        // Setup stop name editing
+        els.itineraryContainer.querySelectorAll('.input-stop-name').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const id = e.target.dataset.pointId;
+                state.customNames[id] = e.target.value;
+                els.itineraryContainer.querySelectorAll('.travel-stop-label').forEach(label => {
+                    if (label.dataset.pointId === id) {
+                        label.textContent = e.target.value;
+                    }
+                });
+            });
+        });
+
+        showToast('✅ 비즈니스 일정표가 생성되었습니다! (경유지 이름 클릭 시 수정 가능)');
     }
 
     // Removed: syncMemoToTable() - No longer needed without memo inputs
