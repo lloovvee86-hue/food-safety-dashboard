@@ -341,21 +341,25 @@
             });
         });
 
+        // --- Accumulate Results through Stages ---
+
         // 1. Stage 1: Standard Keyword Search
         const keywordData = await kSearch(query);
-        allResults = keywordData.map(item => ({
-            name: item.place_name,
-            address: item.road_address_name || item.address_name,
-            lat: parseFloat(item.y),
-            lng: parseFloat(item.x),
-            category: item.category_group_name
-        }));
+        keywordData.forEach(item => {
+            allResults.push({
+                name: item.place_name,
+                address: item.road_address_name || item.address_name,
+                lat: parseFloat(item.y),
+                lng: parseFloat(item.x),
+                category: item.category_group_name
+            });
+        });
 
-        // 2. Stage 2: Address Search Fallback (if no results or specific keyword query)
-        if (allResults.length === 0) {
+        // 2. Stage 2: Address Search Fallback (Continue if results < 5)
+        if (allResults.length < 5) {
             const addressData = await aSearch(query);
-            if (addressData.length > 0) {
-                addressData.forEach(item => {
+            addressData.forEach(item => {
+                if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
                     allResults.push({
                         name: item.address_name,
                         address: item.road_address_name || item.address_name,
@@ -363,29 +367,25 @@
                         lng: parseFloat(item.x),
                         category: '주소/건물'
                     });
-                });
-            }
+                }
+            });
         }
 
-        // 3. Stage 3: Query Splitting Fallback (e.g. "해청정 보령" -> try "해청정", then try "보령")
-        if (allResults.length === 0 && query.includes(' ')) {
+        // 3. Stage 3: Query Splitting Fallback (Continue if results < 5)
+        if (allResults.length < 5 && query.includes(' ')) {
             const parts = query.split(/\s+/).filter(p => p.length > 0);
             if (parts.length >= 2) {
-                // Try each word as a primary keyword
                 for (const part of parts) {
-                    if (allResults.length >= 5) break; // Enough results found
-                    
+                    if (allResults.length >= 8) break; 
                     const wordData = await kSearch(part, { useMapBounds: false });
                     const others = parts.filter(p => p !== part);
-                    
                     const filtered = wordData.filter(item => {
                         const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
                         return others.every(p => fullText.includes(p.toLowerCase()));
                     });
 
                     filtered.forEach(item => {
-                        // Avoid duplicates
-                        if (!allResults.some(r => r.lat === parseFloat(item.y) && r.lng === parseFloat(item.x))) {
+                        if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
                             allResults.push({
                                 name: item.place_name,
                                 address: item.road_address_name || item.address_name,
@@ -399,21 +399,23 @@
             }
         }
 
-        // 4. Stage 4: Backend REST API Fallback (as final resort)
-        if (allResults.length === 0) {
+        // 4. Stage 4: Backend REST API Fallback (Continue if results < 5)
+        if (allResults.length < 5) {
             try {
                 const response = await fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`);
                 if (response.ok) {
                     const restData = await response.json();
                     if (restData.documents && restData.documents.length > 0) {
                         restData.documents.forEach(item => {
-                            allResults.push({
-                                name: item.place_name,
-                                address: item.road_address_name || item.address_name,
-                                lat: parseFloat(item.y),
-                                lng: parseFloat(item.x),
-                                category: item.category_group_name
-                            });
+                            if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
+                                allResults.push({
+                                    name: item.place_name,
+                                    address: item.road_address_name || item.address_name,
+                                    lat: parseFloat(item.y),
+                                    lng: parseFloat(item.x),
+                                    category: item.category_group_name
+                                });
+                            }
                         });
                     }
                 }
@@ -422,17 +424,17 @@
             }
         }
 
-        // 5. Stage 5: Business Suffix Fallback (for factories/offices missed by standard keywords)
-        if (allResults.length === 0) {
+        // 5. Stage 5: Business Suffix Fallback (Aggressive Search for enterprises)
+        // Use Stage 5 even if we have some results (if count < 5)
+        if (allResults.length < 5) {
             const firstWord = query.split(/\s+/)[0];
-            const suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류'];
+            const suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류', '센터'];
             
             for (const suffix of suffixes) {
-                if (allResults.length >= 3) break;
+                if (allResults.length >= 10) break;
                 const suffixQuery = `${firstWord} ${suffix}`;
                 const suffixData = await kSearch(suffixQuery, { useMapBounds: false });
                 
-                // Filter by the rest of the original query parts if applicable
                 const originalParts = query.split(/\s+/).slice(1);
                 const filtered = suffixData.filter(item => {
                     const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
@@ -440,7 +442,7 @@
                 });
 
                 filtered.forEach(item => {
-                    if (!allResults.some(r => r.lat === parseFloat(item.y) && r.lng === parseFloat(item.x))) {
+                    if (!allResults.some(r => Math.abs(r.lat - parseFloat(item.y)) < 0.0001 && Math.abs(r.lng - parseFloat(item.x)) < 0.0001)) {
                         allResults.push({
                             name: item.place_name,
                             address: item.road_address_name || item.address_name,

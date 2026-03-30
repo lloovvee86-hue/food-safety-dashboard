@@ -71,49 +71,46 @@ def search_places():
     keyword_url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
     headers = {'Authorization': f'KakaoAK {client_secret}'}
     
+    documents = []
     try:
         kw_res = requests.get(keyword_url, params={'query': query}, headers=headers)
-        kw_data = kw_res.json()
+        if kw_res.status_code == 200:
+            documents.extend(kw_res.json().get('documents', []))
         
-        # 2. Try Address Search as fallback or addition
-        addr_url = 'https://dapi.kakao.com/v2/local/search/address.json'
-        ad_res = requests.get(addr_url, params={'query': query}, headers=headers)
-        ad_data = ad_res.json()
-        
-        # Merge results
-        documents = kw_data.get('documents', [])
-        
-        # Convert address results to match keyword format
-        for ad in ad_data.get('documents', []):
-            # Check if already in keyword results (by coordinate)
-            if any(d['x'] == ad['x'] and d['y'] == ad['y'] for d in documents):
-                continue
-                
-            documents.append({
-                'place_name': ad.get('address_name'),
-                'address_name': ad.get('address_name'),
-                'road_address_name': ad.get('road_address', {}).get('address_name', ''),
-                'x': ad.get('x'),
-                'y': ad.get('y'),
-                'category_group_name': '주소/건물'
-            })
+        # 2. Try Address Search fallback (Continue if results < 5)
+        if len(documents) < 5:
+            addr_url = 'https://dapi.kakao.com/v2/local/search/address.json'
+            ad_res = requests.get(addr_url, params={'query': query}, headers=headers)
+            if ad_res.status_code == 200:
+                ad_data = ad_res.json()
+                for ad in ad_data.get('documents', []):
+                    # Coordinate-based de-duplication
+                    if not any(abs(float(d['x']) - float(ad['x'])) < 0.0001 and abs(float(d['y']) - float(ad['y'])) < 0.0001 for d in documents):
+                        documents.append({
+                            'place_name': ad.get('address_name'),
+                            'address_name': ad.get('address_name'),
+                            'road_address_name': ad.get('road_address', {}).get('address_name', ''),
+                            'x': ad.get('x'),
+                            'y': ad.get('y'),
+                            'category_group_name': '주소/건물'
+                        })
             
-        # 3. Business Suffix Fallback (if still no results)
-        if not documents:
+        # 3. Business Suffix Fallback (Continue if results < 5)
+        if len(documents) < 5:
             first_word = query.split()[0]
-            suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류']
+            suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류', '센터']
             for suffix in suffixes:
-                if len(documents) >= 5: break
+                if len(documents) >= 10: break
                 s_query = f"{first_word} {suffix}"
                 s_res = requests.get(keyword_url, params={'query': s_query}, headers=headers)
-                s_data = s_res.json()
-                
-                other_parts = query.split()[1:]
-                for doc in s_data.get('documents', []):
-                    full_text = (doc['place_name'] + ' ' + doc['address_name'] + ' ' + doc.get('road_address_name', '')).lower()
-                    if all(p.lower() in full_text for p in other_parts):
-                        if not any(d['x'] == doc['x'] and d['y'] == doc['y'] for d in documents):
-                            documents.append(doc)
+                if s_res.status_code == 200:
+                    s_data = s_res.json()
+                    other_parts = query.split()[1:]
+                    for doc in s_data.get('documents', []):
+                        full_text = (doc['place_name'] + ' ' + doc['address_name'] + ' ' + doc.get('road_address_name', '')).lower()
+                        if all(p.lower() in full_text for p in other_parts):
+                            if not any(abs(float(d['x']) - float(doc['x'])) < 0.0001 and abs(float(d['y']) - float(doc['y'])) < 0.0001 for d in documents):
+                                documents.append(doc)
 
         return jsonify({'documents': documents, 'meta': {'total_count': len(documents)}}), 200
         
