@@ -319,6 +319,7 @@
     const ENTERPRISE_DIRECTORY = [
         { name: '해청정', address: '충남 보령시 웅천읍 웅천산단2길 57-17', lat: 36.239276, lng: 126.575496, category: '식품가공제조' },
         { name: '해청정', address: '전남 완도군 완도읍 농공단지1길 55', lat: 34.334923, lng: 126.734729, category: '식품가공제조' },
+        { name: '으뜸엘엔에스', address: '충남 천안시 동남구 수신면 장산5길 467', lat: 36.743380, lng: 127.290687, category: '식품가공제조' },
     ];
 
     async function searchPlaces(query, dropdown, onSelect) {
