@@ -315,8 +315,8 @@
     }
 
     async function searchPlaces(query, dropdown, onSelect) {
-        console.log(`[Search] Start: "${query}"`);
-        dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중...</div>';
+        console.log(`[검색 시작] "${query}"`);
+        dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중... (전국 수색중)</div>';
         dropdown.classList.add('active');
 
         let allResults = [];
@@ -325,7 +325,6 @@
         const render = () => {
             if (allResults.length === 0) return;
             dropdown.innerHTML = '';
-            // Sort: Exact name match first
             const sorted = [...allResults].sort((a, b) => (a.name === query ? -1 : (b.name === query ? 1 : 0)));
             sorted.slice(0, 15).forEach(place => {
                 dropdown.appendChild(createDropdownItem(place, onSelect, dropdown));
@@ -344,8 +343,7 @@
                     allResults.push({
                         name: item.place_name || item.address_name || item.name,
                         address: item.road_address_name || item.address_name || item.address,
-                        lat,
-                        lng,
+                        lat, lng,
                         category: item.category_group_name || item.category || '기타',
                         source: sourceType
                     });
@@ -353,44 +351,59 @@
                 }
             });
             if (addedCount > 0) {
-                console.log(`[Search] +${addedCount} from ${sourceType}`);
+                console.log(`[검색] ${sourceType}에서 ${addedCount}개 추가됨`);
                 render();
             }
         };
 
-        // Helpers
+        // SDK Helpers with Timeouts
         const kSearch = (q, opts = {}) => new Promise(res => {
             if (!window.kakao?.maps?.services) return res([]);
-            new kakao.maps.services.Places().keywordSearch(q, (d, s) => res(s === 'OK' ? d : []), { size: 15, ...opts });
+            const timeout = setTimeout(() => {
+                console.warn(`[검색] "${q}" 요청 타임아웃`);
+                res([]);
+            }, 3000);
+            new kakao.maps.services.Places().keywordSearch(q, (d, s) => {
+                clearTimeout(timeout);
+                res(s === 'OK' ? d : []);
+            }, { size: 15, ...opts });
         });
+
         const aSearch = (q) => new Promise(res => {
             if (!window.kakao?.maps?.services) return res([]);
-            new kakao.maps.services.Geocoder().addressSearch(q, (d, s) => res(s === 'OK' ? d : []));
+            const timeout = setTimeout(() => res([]), 3000);
+            new kakao.maps.services.Geocoder().addressSearch(q, (d, s) => {
+                clearTimeout(timeout);
+                res(s === 'OK' ? d : []);
+            });
         });
 
-        // 1. Core SDK Stages (Parallel)
-        const sdkStages = [
-            kSearch(query).then(d => addUniqueResults(d, 'SDK_KW')),
-            aSearch(query).then(d => addUniqueResults(d, 'SDK_AD'))
-        ];
+        const sdkStages = [];
         
+        // 1. 기본 수색 (병렬)
+        sdkStages.push(kSearch(query).then(d => addUniqueResults(d, '기본키워드')));
+        sdkStages.push(aSearch(query).then(d => addUniqueResults(d, '주소검색')));
+
+        // 2. 핵심 기업 접미사 수색
         const firstWord = query.split(/\s+/)[0];
         const suffixes = ['공장', '본사', '지점', '물류', '센터'];
-        if (query.length >= 2) {
-            suffixes.forEach(s => {
-                sdkStages.push(kSearch(`${firstWord} ${s}`, { useMapBounds: false }).then(d => addUniqueResults(d, `SDK_SFX(${s})`)));
-            });
-        }
+        suffixes.forEach(s => {
+            sdkStages.push(kSearch(`${firstWord} ${s}`, { useMapBounds: false }).then(d => addUniqueResults(d, `접미사(${s})`)));
+        });
 
-        // Stage 1b: Provincial Sweep (Highly effective for industrial/local POIs)
-        const provinces = ['서울', '경기', '인천', '강원', '충북', '충남', '대전', '전북', '전남', '광주', '경북', '경남', '부산', '제주'];
-        if (query.length >= 2 && allResults.length < 5) {
-            provinces.forEach(p => {
-                sdkStages.push(kSearch(`${p} ${query}`, { useMapBounds: false }).then(d => addUniqueResults(d, `SDK_PROV(${p})`)));
-            });
-        }
+        // 3. 정밀 지역 수색 (순차적/스로틀링으로 SDK 부하 방지)
+        const coreProvinces = ['충남', '전남', '경기', '서울', '경북', '전북', '인천', '충북', '경남', '강원'];
+        const runProvincialSweep = async () => {
+            for (const p of coreProvinces) {
+                if (allResults.length >= 20) break; // 충분히 찾으면 중단
+                await new Promise(r => setTimeout(r, 100)); // 0.1초 간격으로 요청
+                const d = await kSearch(`${p} ${query}`, { useMapBounds: false });
+                addUniqueResults(d, `지역(${p})`);
+            }
+        };
+        sdkStages.push(runProvincialSweep());
 
-        // 2. Direct REST Stage (Primary Fallback)
+        // 4. REST API 및 로컬 서버 수색
         const restKey = localStorage.getItem('kakao_rest_key') || localStorage.getItem('kakao_api_key');
         if (restKey) {
             const callREST = async (q, src) => {
@@ -400,29 +413,30 @@
                     });
                     if (res.ok) {
                         const d = await res.json();
-                        if (d.documents) addUniqueResults(d.documents, src);
+                        if (d.documents) addUniqueResults(d.documents, `REST_${src}`);
                     }
-                } catch (e) { console.warn(`[Search] REST ${src} fail`, e); }
+                } catch (e) { console.warn(`[검색] REST ${src} 오류`, e); }
             };
-
-            sdkStages.push(callREST(query, 'REST_KW'));
-            // Try REST with "공장" suffix specifically for enterprise/POI mapping issues
-            if (query.length >= 2) {
-                sdkStages.push(callREST(`${firstWord} 공장`, 'REST_SFX(공장)'));
-            }
+            sdkStages.push(callREST(query, '기본'));
+            sdkStages.push(callREST(`${firstWord} 공장`, '공장특화'));
         }
 
-        // 3. Local Server Stage
-        sdkStages.push(fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`)
-            .then(res => res.ok ? res.json() : null)
-            .then(d => { if (d?.documents) addUniqueResults(d.documents, 'LocalProxy'); })
-            .catch(() => {})
-        );
+        // 로컬 서버는 Mixed Content 방지를 위해 선택적 호출
+        if (location.protocol === 'http:') {
+            sdkStages.push(fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(d => { if (d?.documents) addUniqueResults(d.documents, '로컬프록시'); })
+                .catch(() => {})
+            );
+        }
 
-        // Final Wait to ensure UI settles
+        // 전체 완료 대기
         await Promise.allSettled(sdkStages);
         if (allResults.length === 0) {
             showDemoResults(query, dropdown, onSelect, true);
+        } else {
+            console.log(`[검색 종료] 최종 ${allResults.length}개 검색됨`);
+            render();
         }
     }
 
