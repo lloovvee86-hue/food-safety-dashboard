@@ -314,129 +314,76 @@
         });
     }
 
+    // ===== 기업 주소록 (카카오 API에 등록되지 않은 사업장) =====
+    const ENTERPRISE_DIRECTORY = [
+        { name: '해청정', address: '충남 보령시 웅천읍 웅천산단2길 57-17', lat: 36.239276, lng: 126.575496, category: '식품가공제조' },
+        { name: '해청정', address: '전남 완도군 완도읍 농공단지1길 55', lat: 34.334923, lng: 126.734729, category: '식품가공제조' },
+    ];
+
     async function searchPlaces(query, dropdown, onSelect) {
         console.log(`[검색 시작] "${query}"`);
-        dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중... (전국 수색중)</div>';
+        dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중...</div>';
         dropdown.classList.add('active');
 
         let allResults = [];
         const seenKeys = new Set();
-        
-        const render = () => {
-            if (allResults.length === 0) return;
-            dropdown.innerHTML = '';
-            const sorted = [...allResults].sort((a, b) => (a.name === query ? -1 : (b.name === query ? 1 : 0)));
-            sorted.slice(0, 15).forEach(place => {
+
+        const addResult = (item) => {
+            const key = `${item.lat.toFixed(5)},${item.lng.toFixed(5)}`;
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                allResults.push(item);
+            }
+        };
+
+        // ★ 1단계: 기업 주소록에서 먼저 검색 (API 미등록 사업장 보완)
+        const q = query.toLowerCase();
+        ENTERPRISE_DIRECTORY.forEach(entry => {
+            if (entry.name.toLowerCase().includes(q) || entry.address.toLowerCase().includes(q) || q.includes(entry.name.toLowerCase())) {
+                addResult({ ...entry });
+            }
+        });
+        console.log(`[검색] 기업주소록에서 ${allResults.length}건 발견`);
+
+        // ★ 2단계: 카카오 SDK 키워드 검색
+        const kSearch = (searchQuery) => new Promise(resolve => {
+            if (!window.kakao?.maps?.services) return resolve([]);
+            const timeout = setTimeout(() => resolve([]), 3000);
+            new kakao.maps.services.Places().keywordSearch(searchQuery, (data, status) => {
+                clearTimeout(timeout);
+                resolve(status === 'OK' ? data : []);
+            }, { size: 15 });
+        });
+
+        const sdkResults = await kSearch(query);
+        sdkResults.forEach(item => {
+            addResult({
+                name: item.place_name,
+                address: item.road_address_name || item.address_name,
+                lat: parseFloat(item.y),
+                lng: parseFloat(item.x),
+                category: item.category_group_name || '기타'
+            });
+        });
+        console.log(`[검색] SDK 키워드에서 ${sdkResults.length}건 발견, 총 ${allResults.length}건`);
+
+        // ★ 3단계: 결과 렌더링
+        dropdown.innerHTML = '';
+        if (allResults.length > 0) {
+            // 정확한 이름 매칭 우선
+            allResults.sort((a, b) => {
+                const aExact = a.name.toLowerCase() === q;
+                const bExact = b.name.toLowerCase() === q;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                return 0;
+            });
+            allResults.slice(0, 15).forEach(place => {
                 dropdown.appendChild(createDropdownItem(place, onSelect, dropdown));
             });
             dropdown.classList.add('active');
-        };
-
-        const addUniqueResults = (data, sourceType) => {
-            let addedCount = 0;
-            data.forEach(item => {
-                const lat = parseFloat(item.y || item.lat);
-                const lng = parseFloat(item.x || item.lng);
-                const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
-                if (!seenKeys.has(key)) {
-                    seenKeys.add(key);
-                    allResults.push({
-                        name: item.place_name || item.address_name || item.name,
-                        address: item.road_address_name || item.address_name || item.address,
-                        lat, lng,
-                        category: item.category_group_name || item.category || '기타',
-                        source: sourceType
-                    });
-                    addedCount++;
-                }
-            });
-            if (addedCount > 0) {
-                console.log(`[검색] ${sourceType}에서 ${addedCount}개 추가됨`);
-                render();
-            }
-        };
-
-        // SDK Helpers with Timeouts
-        const kSearch = (q, opts = {}) => new Promise(res => {
-            if (!window.kakao?.maps?.services) return res([]);
-            const timeout = setTimeout(() => {
-                console.warn(`[검색] "${q}" 요청 타임아웃`);
-                res([]);
-            }, 3000);
-            new kakao.maps.services.Places().keywordSearch(q, (d, s) => {
-                clearTimeout(timeout);
-                res(s === 'OK' ? d : []);
-            }, { size: 15, ...opts });
-        });
-
-        const aSearch = (q) => new Promise(res => {
-            if (!window.kakao?.maps?.services) return res([]);
-            const timeout = setTimeout(() => res([]), 3000);
-            new kakao.maps.services.Geocoder().addressSearch(q, (d, s) => {
-                clearTimeout(timeout);
-                res(s === 'OK' ? d : []);
-            });
-        });
-
-        const sdkStages = [];
-        
-        // 1. 기본 수색 (병렬)
-        sdkStages.push(kSearch(query).then(d => addUniqueResults(d, '기본키워드')));
-        sdkStages.push(aSearch(query).then(d => addUniqueResults(d, '주소검색')));
-
-        // 2. 핵심 기업 접미사 수색
-        const firstWord = query.split(/\s+/)[0];
-        const suffixes = ['공장', '본사', '지점', '물류', '센터'];
-        suffixes.forEach(s => {
-            sdkStages.push(kSearch(`${firstWord} ${s}`, { useMapBounds: false }).then(d => addUniqueResults(d, `접미사(${s})`)));
-        });
-
-        // 3. 정밀 지역 수색 (순차적/스로틀링으로 SDK 부하 방지)
-        const coreProvinces = ['충남', '전남', '경기', '서울', '경북', '전북', '인천', '충북', '경남', '강원'];
-        const runProvincialSweep = async () => {
-            for (const p of coreProvinces) {
-                if (allResults.length >= 20) break; // 충분히 찾으면 중단
-                await new Promise(r => setTimeout(r, 100)); // 0.1초 간격으로 요청
-                const d = await kSearch(`${p} ${query}`, { useMapBounds: false });
-                addUniqueResults(d, `지역(${p})`);
-            }
-        };
-        sdkStages.push(runProvincialSweep());
-
-        // 4. REST API 및 로컬 서버 수색
-        const restKey = localStorage.getItem('kakao_rest_key') || localStorage.getItem('kakao_api_key');
-        if (restKey) {
-            const callREST = async (q, src) => {
-                try {
-                    const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=15`, {
-                        headers: { 'Authorization': `KakaoAK ${restKey}` }
-                    });
-                    if (res.ok) {
-                        const d = await res.json();
-                        if (d.documents) addUniqueResults(d.documents, `REST_${src}`);
-                    }
-                } catch (e) { console.warn(`[검색] REST ${src} 오류`, e); }
-            };
-            sdkStages.push(callREST(query, '기본'));
-            sdkStages.push(callREST(`${firstWord} 공장`, '공장특화'));
-        }
-
-        // 로컬 서버는 Mixed Content 방지를 위해 선택적 호출
-        if (location.protocol === 'http:') {
-            sdkStages.push(fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`)
-                .then(res => res.ok ? res.json() : null)
-                .then(d => { if (d?.documents) addUniqueResults(d.documents, '로컬프록시'); })
-                .catch(() => {})
-            );
-        }
-
-        // 전체 완료 대기
-        await Promise.allSettled(sdkStages);
-        if (allResults.length === 0) {
-            showDemoResults(query, dropdown, onSelect, true);
         } else {
-            console.log(`[검색 종료] 최종 ${allResults.length}개 검색됨`);
-            render();
+            showDemoResults(query, dropdown, onSelect, true);
         }
     }
 
