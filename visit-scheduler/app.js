@@ -347,11 +347,23 @@
 
         // ★ 2단계: 카카오 SDK 키워드 검색
         const kSearch = (searchQuery) => new Promise(resolve => {
-            if (!window.kakao?.maps?.services) return resolve([]);
-            const timeout = setTimeout(() => resolve([]), 3000);
-            new kakao.maps.services.Places().keywordSearch(searchQuery, (data, status) => {
+            if (!window.kakao?.maps?.services) {
+                console.warn('[검색] 카카오 SDK 미로드');
+                return resolve([]);
+            }
+            const timeout = setTimeout(() => {
+                console.warn(`[검색] "${searchQuery}" 타임아웃`);
+                resolve([]);
+            }, 5000);
+            const ps = new kakao.maps.services.Places();
+            ps.keywordSearch(searchQuery, (data, status) => {
                 clearTimeout(timeout);
-                resolve(status === 'OK' ? data : []);
+                console.log(`[검색] SDK "${searchQuery}" 상태: ${status}, 결과: ${data ? data.length : 0}건`);
+                if (status === kakao.maps.services.Status.OK) {
+                    resolve(data);
+                } else {
+                    resolve([]);
+                }
             }, { size: 15 });
         });
 
