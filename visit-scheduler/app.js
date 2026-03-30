@@ -564,19 +564,25 @@
         clone.style.width = '100%';
         clone.style.fontFamily = 'sans-serif';
 
-        // Process cells
+        // Process cells - flatten everything to single lines
         clone.querySelectorAll('th, td').forEach(cell => {
             cell.style.border = '1px solid #dddddd';
             cell.style.padding = '8px';
             cell.style.fontSize = '12px';
+            cell.style.whiteSpace = 'nowrap';
             
-            // Handle inputs/textareas
-            const inputs = cell.querySelectorAll('input, textarea');
-            inputs.forEach(input => {
+            // Replace <br> with space
+            cell.querySelectorAll('br').forEach(br => {
+                br.replaceWith(document.createTextNode(' '));
+            });
+
+            // Handle inputs/textareas - replace with their values
+            cell.querySelectorAll('input, textarea').forEach(input => {
                 const span = document.createElement('span');
-                // For contact input, add the "담당자: " prefix if it's missing in the value
                 if (input.classList.contains('input-contact')) {
                     span.textContent = '담당자: ' + input.value;
+                } else if (input.classList.contains('input-stop-name')) {
+                    span.textContent = input.value;
                 } else {
                     span.textContent = input.value;
                 }
@@ -586,23 +592,29 @@
             // Remove purely decorative or interactive elements
             cell.querySelectorAll('button, .marker-line, .marker-dot').forEach(el => el.remove());
             
-            // Clean up internal wrappers
+            // Clean up break-input-wrapper
             cell.querySelectorAll('.break-input-wrapper').forEach(w => {
-                // Keep the text info
                 const val = parseInt(w.querySelector('input')?.value) || 0;
                 const text = val > 0 ? ` (추가 정지: ${val}분)` : '';
                 w.textContent = text;
+            });
+
+            // Flatten all divs into inline spans with space separator
+            cell.querySelectorAll('div').forEach(div => {
+                const span = document.createElement('span');
+                span.textContent = div.textContent.trim();
+                div.replaceWith(span);
             });
         });
 
         // Generate cleaned HTML string
         const html = clone.outerHTML;
         
-        // Generate plain text version from the CLEANED CLONE
+        // Generate plain text version - each cell on single line
         let plainText = "";
         clone.querySelectorAll('tr').forEach(tr => {
             const cells = Array.from(tr.querySelectorAll('th, td')).map(c => {
-                return c.innerText.replace(/\n/g, " ").trim();
+                return c.textContent.replace(/[\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
             });
             plainText += cells.join("\t") + "\n";
         });
