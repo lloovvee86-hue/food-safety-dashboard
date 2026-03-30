@@ -1074,7 +1074,7 @@
                     <td class="col-duration">
                         <div class="dur-val">${seg.time} min</div>
                         <div class="dist-val">(약 ${Math.ceil(seg.distance / 10) * 10}km)</div>
-                        <div class="road-info">${(seg.majorRoads || []).map(r => r.name).join(' >> ')}</div>
+
                     </td>
                     <td class="col-remarks">
                         <div class="travel-remark-group">
@@ -1091,9 +1091,7 @@
                                 <span>분</span>
                             </div>
                         </div>
-                        <div class="road-tags">
-                            ${(seg.keyNodes || []).map(n => `<span class="tag-node">${n}</span>`).join(' ')}
-                        </div>
+
                     </td>
                 </tr>
             `;
