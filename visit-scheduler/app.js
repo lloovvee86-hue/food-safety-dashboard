@@ -64,8 +64,10 @@
     // ===== Init =====
     function init() {
         setupEventListeners();
+        setupEnterpriseUI();
         initDragAndDrop();
         initCopy();
+        loadEnterpriseDirectory();
         if (state.apiKey) {
             hideModal();
             loadKakaoMapScript();
@@ -315,12 +317,176 @@
         });
     }
 
-    // ===== 기업 주소록 (카카오 API에 등록되지 않은 사업장) =====
-    const ENTERPRISE_DIRECTORY = [
-        { name: '해청정', address: '충남 보령시 웅천읍 웅천산단2길 57-17', lat: 36.239276, lng: 126.575496, category: '식품가공제조' },
-        { name: '해청정', address: '전남 완도군 완도읍 농공단지1길 55', lat: 34.334923, lng: 126.734729, category: '식품가공제조' },
-        { name: '으뜸엘엔에스', address: '충남 천안시 동남구 수신면 장산5길 467', lat: 36.743380, lng: 127.290687, category: '식품가공제조' },
-    ];
+    // ===== 기업 주소록 (JSON 파일 + localStorage 병합) =====
+    let ENTERPRISE_DIRECTORY = [];
+
+    // Load enterprise directory from JSON + localStorage
+    async function loadEnterpriseDirectory() {
+        // 1. Load from JSON file (base directory)
+        try {
+            const res = await fetch('enterprise_directory.json');
+            if (res.ok) {
+                const data = await res.json();
+                ENTERPRISE_DIRECTORY = data.filter(e => e.lat !== 0 && e.lng !== 0);
+                console.log(`[기업주소록] JSON에서 ${ENTERPRISE_DIRECTORY.length}건 로드`);
+            }
+        } catch (e) {
+            console.warn('[기업주소록] JSON 로드 실패', e);
+        }
+
+        // 2. Merge with localStorage (user-added entries)
+        try {
+            const stored = JSON.parse(localStorage.getItem('enterprise_custom') || '[]');
+            stored.forEach(entry => {
+                // Avoid duplicates by checking name+address
+                const exists = ENTERPRISE_DIRECTORY.some(e => 
+                    e.name === entry.name && e.address === entry.address
+                );
+                if (!exists) ENTERPRISE_DIRECTORY.push(entry);
+            });
+            if (stored.length) console.log(`[기업주소록] localStorage에서 ${stored.length}건 병합`);
+        } catch (e) {}
+    }
+
+    // Enterprise Management UI
+    function setupEnterpriseUI() {
+        const btn = document.getElementById('enterpriseBtn');
+        const modal = document.getElementById('enterpriseModal');
+        const addBtn = document.getElementById('addEnterpriseBtn');
+        if (!btn || !modal) return;
+
+        btn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            renderEnterpriseList();
+        });
+
+        addBtn.addEventListener('click', async () => {
+            const nameInput = document.getElementById('entNameInput');
+            const addrInput = document.getElementById('entAddressInput');
+            const catInput = document.getElementById('entCategoryInput');
+            const name = nameInput.value.trim();
+            const address = addrInput.value.trim();
+            const category = catInput.value.trim() || '협력사';
+
+            if (!name || !address) {
+                showToast('⚠️ 업체명과 주소를 모두 입력해주세요.');
+                return;
+            }
+
+            showToast('🔍 주소에서 좌표를 찾는 중...');
+
+            // Geocode the address using Kakao SDK
+            let lat = 0, lng = 0;
+            try {
+                const coords = await geocodeAddress(address);
+                lat = coords.lat;
+                lng = coords.lng;
+            } catch (e) {
+                showToast('⚠️ 주소 좌표 변환 실패. 주소를 확인해주세요.');
+                return;
+            }
+
+            const entry = { name, address, lat, lng, category };
+            
+            // Save to localStorage
+            const stored = JSON.parse(localStorage.getItem('enterprise_custom') || '[]');
+            stored.push(entry);
+            localStorage.setItem('enterprise_custom', JSON.stringify(stored));
+            
+            // Add to runtime directory
+            ENTERPRISE_DIRECTORY.push(entry);
+
+            // Clear inputs
+            nameInput.value = '';
+            addrInput.value = '';
+            catInput.value = '';
+
+            showToast(`✅ "${name}" 등록 완료!`);
+            renderEnterpriseList();
+        });
+    }
+
+    function geocodeAddress(address) {
+        return new Promise((resolve, reject) => {
+            if (window.kakao?.maps?.services) {
+                const geocoder = new kakao.maps.services.Geocoder();
+                geocoder.addressSearch(address, (result, status) => {
+                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
+                        resolve({ lat: parseFloat(result[0].y), lng: parseFloat(result[0].x) });
+                    } else {
+                        reject(new Error('Geocode failed'));
+                    }
+                });
+            } else {
+                // Fallback: use REST API via proxy
+                fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(address)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.documents?.length) {
+                            resolve({ lat: parseFloat(data.documents[0].y), lng: parseFloat(data.documents[0].x) });
+                        } else reject(new Error('No results'));
+                    })
+                    .catch(reject);
+            }
+        });
+    }
+
+    function renderEnterpriseList() {
+        const list = document.getElementById('enterpriseList');
+        if (!list) return;
+        
+        const stored = JSON.parse(localStorage.getItem('enterprise_custom') || '[]');
+        const storedKeys = new Set(stored.map(e => `${e.name}|${e.address}`));
+        
+        let html = `<div style="font-size:0.8rem; color:#8b8fa3; margin-bottom:0.5rem;">
+            등록된 업체: ${ENTERPRISE_DIRECTORY.length}건 (사용자 추가: ${stored.length}건)
+        </div>`;
+        
+        // Show user-added entries first (deletable)
+        if (stored.length > 0) {
+            html += '<div style="margin-bottom:0.5rem; font-size:0.75rem; color:var(--accent-green); font-weight:600;">📌 사용자 추가 업체</div>';
+            stored.forEach((entry, i) => {
+                html += `<div style="display:flex; align-items:center; justify-content:space-between; padding:6px 8px; margin-bottom:4px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.8rem;">
+                    <div>
+                        <strong>${entry.name}</strong>
+                        <div style="color:#8b8fa3; font-size:0.7rem;">${entry.address}</div>
+                    </div>
+                    <button onclick="window._deleteEnterprise(${i})" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:1rem; padding:2px 6px;" title="삭제">✕</button>
+                </div>`;
+            });
+        }
+        
+        // Show base entries (not deletable, collapsible)
+        const baseCount = ENTERPRISE_DIRECTORY.length - stored.length;
+        html += `<details style="margin-top:0.5rem;">
+            <summary style="cursor:pointer; font-size:0.75rem; color:#8b8fa3; padding:4px 0;">📋 기본 등록 업체 (${baseCount}건) 펼쳐보기</summary>
+            <div style="max-height:200px; overflow-y:auto; margin-top:4px;">`;
+        ENTERPRISE_DIRECTORY.forEach(entry => {
+            if (!storedKeys.has(`${entry.name}|${entry.address}`)) {
+                html += `<div style="padding:4px 8px; font-size:0.75rem; border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <strong>${entry.name}</strong> <span style="color:#8b8fa3;">${entry.address.substring(0, 25)}...</span>
+                </div>`;
+            }
+        });
+        html += '</div></details>';
+        
+        list.innerHTML = html;
+    }
+
+    // Global delete function for enterprise entries
+    window._deleteEnterprise = function(index) {
+        const stored = JSON.parse(localStorage.getItem('enterprise_custom') || '[]');
+        const removed = stored.splice(index, 1)[0];
+        localStorage.setItem('enterprise_custom', JSON.stringify(stored));
+        
+        // Remove from runtime directory
+        ENTERPRISE_DIRECTORY = ENTERPRISE_DIRECTORY.filter(e => 
+            !(e.name === removed.name && e.address === removed.address)
+        );
+        
+        showToast(`🗑️ "${removed.name}" 삭제됨`);
+        renderEnterpriseList();
+    };
 
     async function searchPlaces(query, dropdown, onSelect) {
         console.log(`[검색 시작] "${query}"`);
