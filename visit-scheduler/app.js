@@ -314,34 +314,136 @@
         });
     }
 
-    function searchPlaces(query, dropdown, onSelect) {
-        // 1. Try Kakao SDK Search first
-        if (window.kakao && kakao.maps && kakao.maps.services) {
+    async function searchPlaces(query, dropdown, onSelect) {
+        // 0. Initial Loading State
+        dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중...</div>';
+        dropdown.classList.add('active');
+
+        let allResults = [];
+        
+        // Helper to perform keyword search via SDK
+        const kSearch = (q, options = {}) => new Promise(resolve => {
+            if (!window.kakao || !kakao.maps || !kakao.maps.services) return resolve([]);
             const ps = new kakao.maps.services.Places();
-            ps.keywordSearch(query, (data, status) => {
-                if (status === kakao.maps.services.Status.OK) {
-                    dropdown.innerHTML = '';
-                    data.forEach(item => {
-                        const place = {
-                            name: item.place_name,
-                            address: item.road_address_name || item.address_name,
-                            lat: parseFloat(item.y),
-                            lng: parseFloat(item.x),
-                            category: item.category_group_name
-                        };
-                        const div = createDropdownItem(place, onSelect, dropdown);
-                        dropdown.appendChild(div);
+            ps.keywordSearch(q, (data, status) => {
+                if (status === kakao.maps.services.Status.OK) resolve(data);
+                else resolve([]);
+            }, options);
+        });
+
+        // Helper to perform address search via SDK
+        const aSearch = (q) => new Promise(resolve => {
+            if (!window.kakao || !kakao.maps || !kakao.maps.services) return resolve([]);
+            const geocoder = new kakao.maps.services.Geocoder();
+            geocoder.addressSearch(q, (data, status) => {
+                if (status === kakao.maps.services.Status.OK) resolve(data);
+                else resolve([]);
+            });
+        });
+
+        // 1. Stage 1: Standard Keyword Search
+        const keywordData = await kSearch(query);
+        allResults = keywordData.map(item => ({
+            name: item.place_name,
+            address: item.road_address_name || item.address_name,
+            lat: parseFloat(item.y),
+            lng: parseFloat(item.x),
+            category: item.category_group_name
+        }));
+
+        // 2. Stage 2: Address Search Fallback (if no results or specific keyword query)
+        if (allResults.length === 0) {
+            const addressData = await aSearch(query);
+            if (addressData.length > 0) {
+                addressData.forEach(item => {
+                    allResults.push({
+                        name: item.address_name,
+                        address: item.road_address_name || item.address_name,
+                        lat: parseFloat(item.y),
+                        lng: parseFloat(item.x),
+                        category: '주소/건물'
                     });
-                    dropdown.classList.add('active');
-                } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-                    showDemoResults(query, dropdown, onSelect, true);
-                } else {
-                    showDemoResults(query, dropdown, onSelect, false);
+                });
+            }
+        }
+
+        // 3. Stage 3: Query Splitting Fallback (e.g. "해청정 보령" -> try "해청정", then try "보령")
+        if (allResults.length === 0 && query.includes(' ')) {
+            const parts = query.split(/\s+/).filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                // Try each word as a primary keyword
+                for (const part of parts) {
+                    if (allResults.length >= 5) break; // Enough results found
+                    
+                    const wordData = await kSearch(part, { useMapBounds: false });
+                    const others = parts.filter(p => p !== part);
+                    
+                    const filtered = wordData.filter(item => {
+                        const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
+                        return others.every(p => fullText.includes(p.toLowerCase()));
+                    });
+
+                    filtered.forEach(item => {
+                        // Avoid duplicates
+                        if (!allResults.some(r => r.lat === parseFloat(item.y) && r.lng === parseFloat(item.x))) {
+                            allResults.push({
+                                name: item.place_name,
+                                address: item.road_address_name || item.address_name,
+                                lat: parseFloat(item.y),
+                                lng: parseFloat(item.x),
+                                category: item.category_group_name
+                            });
+                        }
+                    });
+                }
+            }
+        }
+
+        // 4. Stage 4: Backend REST API Fallback (as final resort)
+        if (allResults.length === 0) {
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`);
+                if (response.ok) {
+                    const restData = await response.json();
+                    if (restData.documents && restData.documents.length > 0) {
+                        restData.documents.forEach(item => {
+                            allResults.push({
+                                name: item.place_name,
+                                address: item.road_address_name || item.address_name,
+                                lat: parseFloat(item.y),
+                                lng: parseFloat(item.x),
+                                category: item.category_group_name
+                            });
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('REST fallback search failed', err);
+            }
+        }
+
+        // 5. Render Results
+        dropdown.innerHTML = '';
+        if (allResults.length > 0) {
+            // Remove duplicates based on lat/lng (with slight tolerance)
+            const uniqueResults = [];
+            const seen = new Set();
+            allResults.forEach(p => {
+                const key = `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResults.push(p);
                 }
             });
+
+            uniqueResults.forEach(place => {
+                const div = createDropdownItem(place, onSelect, dropdown);
+                dropdown.appendChild(div);
+            });
+            dropdown.classList.add('active');
         } else {
-            // 2. Fallback to Demo if SDK not available
-            showDemoResults(query, dropdown, onSelect, false);
+            // 6. Final Fallback to Demo if all else fails
+            showDemoResults(query, dropdown, onSelect, true);
         }
     }
 

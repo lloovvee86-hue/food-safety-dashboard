@@ -122,11 +122,12 @@ body { font-family:var(--font); background:var(--bg-primary); color:var(--text-p
 /* Header */
 .app-header { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.5rem; background:var(--gradient-header); border-bottom:1px solid var(--border-subtle); position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
 .header-left .logo { display:flex; align-items:center; gap:0.8rem; }
-.logo-icon { font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:44px; height:44px; background:var(--accent-green-dim); border-radius:var(--radius-md); }
+.logo-icon-img { width: 68px; height: 68px; object-fit: contain; border-radius: var(--radius-md); margin-right: 4px; }
 .logo h1 { font-size:1.15rem; font-weight:700; letter-spacing:-0.02em; }
 .header-subtitle { font-size:0.75rem; color:var(--text-muted); font-weight:400; }
 .header-right { display:flex; align-items:center; gap:0.8rem; }
-.brand-badge { background:var(--accent-green-dim); color:var(--accent-green); padding:0.35rem 0.8rem; border-radius:20px; font-size:0.75rem; font-weight:600; }
+.brand-logo { height: 40px; width: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(46, 204, 113, 0.25)); cursor: pointer; transition: transform var(--transition-fast); margin-left: 0.5rem; }
+.brand-logo:hover { transform: scale(1.08); }
 
 /* Main Layout */
 .app-main { display:flex; height:calc(100vh - 62px); }

@@ -67,20 +67,39 @@ def search_places():
     print(f"DEBUG: Search query received: {query}")
     print(f"DEBUG: Using REST API Key: {client_secret[:5]}...")
 
-    # Kakao Local Search (Keyword)
-    url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
-    params = {'query': query}
-    headers = {
-        'Authorization': f'KakaoAK {client_secret}'
-    }
-
+    # 1. Try Keyword Search first
+    keyword_url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
+    headers = {'Authorization': f'KakaoAK {client_secret}'}
+    
     try:
-        response = requests.get(url, params=params, headers=headers)
-        print(f"DEBUG: Kakao Status Code: {response.status_code}")
-        kakao_data = response.json()
-        if response.status_code != 200:
-            print(f"DEBUG: Kakao Error Response: {kakao_data}")
-        return jsonify(kakao_data), response.status_code
+        kw_res = requests.get(keyword_url, params={'query': query}, headers=headers)
+        kw_data = kw_res.json()
+        
+        # 2. Try Address Search as fallback or addition
+        addr_url = 'https://dapi.kakao.com/v2/local/search/address.json'
+        ad_res = requests.get(addr_url, params={'query': query}, headers=headers)
+        ad_data = ad_res.json()
+        
+        # Merge results
+        documents = kw_data.get('documents', [])
+        
+        # Convert address results to match keyword format
+        for ad in ad_data.get('documents', []):
+            # Check if already in keyword results (by coordinate)
+            if any(d['x'] == ad['x'] and d['y'] == ad['y'] for d in documents):
+                continue
+                
+            documents.append({
+                'place_name': ad.get('address_name'),
+                'address_name': ad.get('address_name'),
+                'road_address_name': ad.get('road_address', {}).get('address_name', ''),
+                'x': ad.get('x'),
+                'y': ad.get('y'),
+                'category_group_name': '주소/건물'
+            })
+            
+        return jsonify({'documents': documents, 'meta': {'total_count': len(documents)}}), 200
+        
     except Exception as e:
         print(f"DEBUG: Search Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
