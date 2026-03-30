@@ -315,14 +315,24 @@
     }
 
     async function searchPlaces(query, dropdown, onSelect) {
-        console.log(`[Search] Query: "${query}"`);
-        // 0. Initial Loading State
+        console.log(`[Search] Start: "${query}"`);
         dropdown.innerHTML = '<div class="dropdown-item" style="pointer-events:none; color:var(--text-muted)">🔍 검색 중...</div>';
         dropdown.classList.add('active');
 
         let allResults = [];
         const seenKeys = new Set();
         
+        const render = () => {
+            if (allResults.length === 0) return;
+            dropdown.innerHTML = '';
+            // Sort: Exact name match first
+            const sorted = [...allResults].sort((a, b) => (a.name === query ? -1 : (b.name === query ? 1 : 0)));
+            sorted.slice(0, 15).forEach(place => {
+                dropdown.appendChild(createDropdownItem(place, onSelect, dropdown));
+            });
+            dropdown.classList.add('active');
+        };
+
         const addUniqueResults = (data, sourceType) => {
             let addedCount = 0;
             data.forEach(item => {
@@ -342,123 +352,68 @@
                     addedCount++;
                 }
             });
-            if (addedCount > 0) console.log(`[Search] Added ${addedCount} results from ${sourceType}`);
+            if (addedCount > 0) {
+                console.log(`[Search] +${addedCount} from ${sourceType}`);
+                render();
+            }
         };
 
-        // Helper to perform keyword search via SDK
-        const kSearch = (q, options = {}) => new Promise(resolve => {
-            if (!window.kakao || !kakao.maps || !kakao.maps.services) return resolve([]);
-            const ps = new kakao.maps.services.Places();
-            ps.keywordSearch(q, (data, status) => {
-                if (status === kakao.maps.services.Status.OK) resolve(data);
-                else resolve([]);
-            }, { size: 15, ...options });
+        // Helpers
+        const kSearch = (q, opts = {}) => new Promise(res => {
+            if (!window.kakao?.maps?.services) return res([]);
+            new kakao.maps.services.Places().keywordSearch(q, (d, s) => res(s === 'OK' ? d : []), { size: 15, ...opts });
+        });
+        const aSearch = (q) => new Promise(res => {
+            if (!window.kakao?.maps?.services) return res([]);
+            new kakao.maps.services.Geocoder().addressSearch(q, (d, s) => res(s === 'OK' ? d : []));
         });
 
-        // Helper to perform address search via SDK
-        const aSearch = (q) => new Promise(resolve => {
-            if (!window.kakao || !kakao.maps || !kakao.maps.services) return resolve([]);
-            const geocoder = new kakao.maps.services.Geocoder();
-            geocoder.addressSearch(q, (data, status) => {
-                if (status === kakao.maps.services.Status.OK) resolve(data);
-                else resolve([]);
-            });
-        });
-
-        // --- Parallel Execution of Stages ---
-        const stages = [];
-
-        // Stage 1: Basic Keyword
-        stages.push(kSearch(query).then(data => addUniqueResults(data, 'Keyword')));
-
-        // Stage 2: Address Search
-        stages.push(aSearch(query).then(data => addUniqueResults(data, 'Address')));
-
-        // Stage 3: Split Search (if multi-word)
-        if (query.trim().includes(' ')) {
-            const parts = query.split(/\s+/).filter(p => p.length > 0);
-            parts.forEach(part => {
-                stages.push(kSearch(part, { useMapBounds: false }).then(data => {
-                    const others = parts.filter(p => p !== part);
-                    const filtered = data.filter(item => {
-                        const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
-                        return others.every(p => fullText.includes(p.toLowerCase()));
-                    });
-                    addUniqueResults(filtered, `Split(${part})`);
-                }));
+        // 1. Core SDK Stages (Parallel)
+        const sdkStages = [
+            kSearch(query).then(d => addUniqueResults(d, 'SDK_KW')),
+            aSearch(query).then(d => addUniqueResults(d, 'SDK_AD'))
+        ];
+        
+        const firstWord = query.split(/\s+/)[0];
+        const suffixes = ['공장', '본사', '지점', '물류', '센터'];
+        if (query.length >= 2) {
+            suffixes.forEach(s => {
+                sdkStages.push(kSearch(`${firstWord} ${s}`, { useMapBounds: false }).then(d => addUniqueResults(d, `SDK_SFX(${s})`)));
             });
         }
 
-        // Stage 4: Business Suffixes (Aggressive)
-        const firstWord = query.split(/\s+/)[0];
-        const suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류', '센터'];
-        suffixes.forEach(suffix => {
-            const suffixQuery = `${firstWord} ${suffix}`;
-            stages.push(kSearch(suffixQuery, { useMapBounds: false }).then(data => {
-                const originalParts = query.split(/\s+/).slice(1);
-                const filtered = data.filter(item => {
-                    const fullText = (item.place_name + ' ' + (item.road_address_name || item.address_name)).toLowerCase();
-                    return originalParts.every(p => fullText.includes(p.toLowerCase()));
-                });
-                addUniqueResults(filtered, `Suffix(${suffix})`);
-            }));
-        });
-
-        // Max wait for SDK stages
-        await Promise.race([
-            Promise.all(stages),
-            new Promise(resolve => setTimeout(resolve, 3500))
-        ]);
-
-        console.log(`[Search] After SDK stages, Unique Results: ${allResults.length}`);
-
-        // 6. Direct REST API Fallback (Primary fallback for enterprise locations)
-        // This bypasses SDK limitations and local server issues.
-        if (allResults.length < 5) {
-            console.log('[Search] Attempting direct REST API fallback...');
-            const restKey = localStorage.getItem('kakao_rest_key') || localStorage.getItem('kakao_api_key');
-            if (restKey) {
+        // 2. Direct REST Stage (Primary Fallback)
+        const restKey = localStorage.getItem('kakao_rest_key') || localStorage.getItem('kakao_api_key');
+        if (restKey) {
+            const callREST = async (q, src) => {
                 try {
-                    const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=15`;
-                    const response = await fetch(restUrl, {
+                    const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(q)}&size=15`, {
                         headers: { 'Authorization': `KakaoAK ${restKey}` }
                     });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.documents) {
-                            addUniqueResults(data.documents, 'DirectREST');
-                        }
-                    } else if (response.status === 401) {
-                        console.warn('[Search] Direct REST failed: Unauthorized. Please check REST API key.');
+                    if (res.ok) {
+                        const d = await res.json();
+                        if (d.documents) addUniqueResults(d.documents, src);
                     }
-                } catch (err) {
-                    console.warn('[Search] Direct REST fallback failed (CORS or Network)', err);
-                }
+                } catch (e) { console.warn(`[Search] REST ${src} fail`, e); }
+            };
+
+            sdkStages.push(callREST(query, 'REST_KW'));
+            // Try REST with "공장" suffix specifically for enterprise/POI mapping issues
+            if (query.length >= 2) {
+                sdkStages.push(callREST(`${firstWord} 공장`, 'REST_SFX(공장)'));
             }
         }
 
-        // 7. Local Server Fallback (Existing)
-        if (allResults.length < 5) {
-            try {
-                const response = await fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.documents) addUniqueResults(data.documents, 'LocalProxy');
-                }
-            } catch (err) {
-                // Ignore local server failures
-            }
-        }
+        // 3. Local Server Stage
+        sdkStages.push(fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(d => { if (d?.documents) addUniqueResults(d.documents, 'LocalProxy'); })
+            .catch(() => {})
+        );
 
-        // 8. Final Rendering
-        dropdown.innerHTML = '';
-        if (allResults.length > 0) {
-            allResults.sort((a, b) => (a.name === query ? -1 : (b.name === query ? 1 : 0)));
-            allResults.slice(0, 15).forEach(place => {
-                dropdown.appendChild(createDropdownItem(place, onSelect, dropdown));
-            });
-            dropdown.classList.add('active');
-        } else {
+        // Final Wait to ensure UI settles
+        await Promise.allSettled(sdkStages);
+        if (allResults.length === 0) {
             showDemoResults(query, dropdown, onSelect, true);
         }
     }
