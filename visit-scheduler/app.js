@@ -382,6 +382,14 @@
             });
         }
 
+        // Stage 1b: Provincial Sweep (Highly effective for industrial/local POIs)
+        const provinces = ['서울', '경기', '인천', '강원', '충북', '충남', '대전', '전북', '전남', '광주', '경북', '경남', '부산', '제주'];
+        if (query.length >= 2 && allResults.length < 5) {
+            provinces.forEach(p => {
+                sdkStages.push(kSearch(`${p} ${query}`, { useMapBounds: false }).then(d => addUniqueResults(d, `SDK_PROV(${p})`)));
+            });
+        }
+
         // 2. Direct REST Stage (Primary Fallback)
         const restKey = localStorage.getItem('kakao_rest_key') || localStorage.getItem('kakao_api_key');
         if (restKey) {
