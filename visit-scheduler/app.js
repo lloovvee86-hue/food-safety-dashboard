@@ -404,49 +404,61 @@
             }));
         });
 
-        // Wait for all stages (with a timeout to ensure responsiveness)
+        // Max wait for SDK stages
         await Promise.race([
             Promise.all(stages),
-            new Promise(resolve => setTimeout(resolve, 3000)) // Max 3s wait
+            new Promise(resolve => setTimeout(resolve, 3500))
         ]);
 
-        console.log(`[Search] Total Unique Results: ${allResults.length}`);
+        console.log(`[Search] After SDK stages, Unique Results: ${allResults.length}`);
 
-        // 5. Render Results
-        dropdown.innerHTML = '';
-        if (allResults.length > 0) {
-            // Priority: Exact name match first
-            allResults.sort((a, b) => {
-                const aExact = a.name === query;
-                const bExact = b.name === query;
-                if (aExact && !bExact) return -1;
-                if (!aExact && bExact) return 1;
-                return 0;
-            });
+        // 6. Direct REST API Fallback (Primary fallback for enterprise locations)
+        // This bypasses SDK limitations and local server issues.
+        if (allResults.length < 5) {
+            console.log('[Search] Attempting direct REST API fallback...');
+            const restKey = localStorage.getItem('kakao_rest_key') || localStorage.getItem('kakao_api_key');
+            if (restKey) {
+                try {
+                    const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=15`;
+                    const response = await fetch(restUrl, {
+                        headers: { 'Authorization': `KakaoAK ${restKey}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.documents) {
+                            addUniqueResults(data.documents, 'DirectREST');
+                        }
+                    } else if (response.status === 401) {
+                        console.warn('[Search] Direct REST failed: Unauthorized. Please check REST API key.');
+                    }
+                } catch (err) {
+                    console.warn('[Search] Direct REST fallback failed (CORS or Network)', err);
+                }
+            }
+        }
 
-            allResults.slice(0, 15).forEach(place => {
-                const div = createDropdownItem(place, onSelect, dropdown);
-                dropdown.appendChild(div);
-            });
-            dropdown.classList.add('active');
-        } else {
-            // 6. Last resort: Backend API
+        // 7. Local Server Fallback (Existing)
+        if (allResults.length < 5) {
             try {
                 const response = await fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(query)}`);
                 if (response.ok) {
-                    const restData = await response.json();
-                    if (restData.documents && restData.documents.length > 0) {
-                        addUniqueResults(restData.documents, 'REST');
-                        if (allResults.length > 0) {
-                            dropdown.innerHTML = '';
-                            allResults.forEach(place => dropdown.appendChild(createDropdownItem(place, onSelect, dropdown)));
-                            dropdown.classList.add('active');
-                            return;
-                        }
-                    }
+                    const data = await response.json();
+                    if (data.documents) addUniqueResults(data.documents, 'LocalProxy');
                 }
-            } catch (err) {}
-            
+            } catch (err) {
+                // Ignore local server failures
+            }
+        }
+
+        // 8. Final Rendering
+        dropdown.innerHTML = '';
+        if (allResults.length > 0) {
+            allResults.sort((a, b) => (a.name === query ? -1 : (b.name === query ? 1 : 0)));
+            allResults.slice(0, 15).forEach(place => {
+                dropdown.appendChild(createDropdownItem(place, onSelect, dropdown));
+            });
+            dropdown.classList.add('active');
+        } else {
             showDemoResults(query, dropdown, onSelect, true);
         }
     }
