@@ -1286,6 +1286,7 @@
             // 2. Stay Row
             if (i < segments.length) {
                 const point = allPoints[i + 1];
+                const isLast = (i === segments.length - 1);
                 const id = point.id || `${point.lat}-${point.lng}`;
                 const stayMin = i < stayDurations.length ? stayDurations[i] : 0;
                 const roundedStay = Math.round(stayMin / 10) * 10;
@@ -1308,14 +1309,19 @@
                         </td>
                         <td class="col-duration">${stayMin} min</td>
                         <td class="col-remarks">
-                            <div class="remark-addr">주소: ${point.address || ''}</div>
-                            <div class="remark-contact">
-                                <span>담당자: </span>
-                                <input type="text" class="input-contact" 
-                                    data-point-id="${id}" 
-                                    value="${state.contacts[id] || ''}" 
-                                    placeholder="성명/직함/연락처">
-                            </div>
+                            ${isLast ? '' : `
+                                <div class="remark-item">
+                                    <div class="remark-addr">📍 ${point.address || ''}</div>
+                                    <div class="remark-contact" style="display:flex; align-items:center; margin-top:4px; border-top:1px dashed var(--border-subtle); padding-top:4px;">
+                                        <span style="color:var(--text-muted); font-size:0.75rem; margin-right:6px; white-space:nowrap;">👤 담당:</span>
+                                        <input type="text" class="input-contact" 
+                                            data-point-id="${id}" 
+                                            value="${(state.contacts[id] || '').replace('담당자: ', '').replace('담당자:', '')}" 
+                                            placeholder="성명/직함/연락처"
+                                            style="border:none; background:transparent; color:var(--accent-blue); font-size:0.8rem; width:100%; outline:none; font-weight:500;">
+                                    </div>
+                                </div>
+                            `}
                         </td>
                     </tr>
                 `;
