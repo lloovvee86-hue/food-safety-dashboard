@@ -54,6 +54,23 @@
         </div>
     </div>
 
+    <!-- Save Schedule Modal -->
+    <div id="saveScheduleModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="btn-close-modal" onclick="document.getElementById('saveScheduleModal').classList.add('hidden')" aria-label="닫기">✕</button>
+            <div class="modal-icon">💾</div>
+            <h2>일정 저장</h2>
+            <p>저장할 일정의 이름을 입력해주세요.</p>
+            <div class="modal-input-group">
+                <input type="text" id="scheduleNameInput" placeholder="예: 3/31 충청권 방문" autocomplete="off">
+            </div>
+            <div class="modal-actions">
+                <button id="confirmSaveBtn" class="btn-primary">저장</button>
+                <button class="btn-secondary" onclick="document.getElementById('saveScheduleModal').classList.add('hidden')">취소</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Enterprise Directory Modal -->
     <div id="enterpriseModal" class="modal-overlay hidden">
         <div class="modal-card" style="max-width:520px; max-height:80vh; display:flex; flex-direction:column;">
@@ -203,19 +220,32 @@
         <aside class="itinerary-panel" id="itineraryPanel">
             <div class="panel-header">
                 <h2>📋 비즈니스 일정표</h2>
-                <button id="copyItineraryBtn" class="btn-copy" title="클립보드에 복사 (엑셀 붙여넣기용)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    복사
-                </button>
+                <div style="display:flex; gap:0.4rem;">
+                    <button id="saveScheduleBtn" class="btn-save" title="일정 저장">
+                        💾 저장
+                    </button>
+                    <button id="copyItineraryBtn" class="btn-copy" title="클립보드에 복사 (엑셀 붙여넣기용)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        복사
+                    </button>
+                </div>
             </div>
             <div id="itineraryContainer" class="itinerary-container">
                 <div class="itinerary-empty">
                     <div class="itinerary-empty-icon">📊</div>
                     <p>경로를 계산하시면<br>상세 일정표가 여기에 표시됩니다.</p>
                 </div>
+            </div>
+
+            <!-- Saved Schedules -->
+            <div id="savedSchedulesSection" class="saved-schedules-section">
+                <div class="saved-schedules-header">
+                    <h3>📂 저장된 일정</h3>
+                </div>
+                <div id="savedSchedulesList" class="saved-schedules-list"></div>
             </div>
         </aside>
 
@@ -237,7 +267,7 @@
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <script src="app.js?v=1.0.3"></script>
+    <script src="app.js?v=1.1.0"></script>
 </body>
 
 </html>

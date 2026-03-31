@@ -58,7 +58,13 @@
         adminPasswordInput: $('#adminPasswordInput'),
         verifyPasswordBtn: $('#verifyPasswordBtn'),
         closePasswordBtn: $('#closePasswordBtn'),
-        toast: $('#toast')
+        toast: $('#toast'),
+        // Save schedule
+        saveScheduleBtn: $('#saveScheduleBtn'),
+        saveScheduleModal: $('#saveScheduleModal'),
+        scheduleNameInput: $('#scheduleNameInput'),
+        confirmSaveBtn: $('#confirmSaveBtn'),
+        savedSchedulesList: $('#savedSchedulesList')
     };
 
     // ===== Init =====
@@ -67,7 +73,9 @@
         setupEnterpriseUI();
         initDragAndDrop();
         initCopy();
+        initSaveSchedule();
         loadEnterpriseDirectory();
+        renderSavedSchedules();
         if (state.apiKey) {
             hideModal();
             loadKakaoMapScript();
@@ -1222,13 +1230,13 @@
         const dayStr = ['일','월','화','수','목','금','토'][now.getDay()];
 
         let tableHtml = `
-            <div class="itinerary-summary" style="padding:1rem; background:rgba(255,255,255,0.05); border-radius:12px; margin-bottom:1rem; font-size:0.85rem;">
+            <div class="itinerary-summary" style="padding:1rem; background:var(--bg-input); border-radius:12px; margin-bottom:1rem; font-size:0.85rem;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                    <span style="color:#8b8fa3">총 거리:</span>
+                    <span style="color:var(--text-muted)">총 거리:</span>
                     <span style="font-weight:700; color:var(--accent-green)">${totalDistance.toFixed(1)}km</span>
                 </div>
                 <div style="display:flex; justify-content:space-between;">
-                    <span style="color:#8b8fa3">총 소요시간:</span>
+                    <span style="color:var(--text-muted)">총 소요시간:</span>
                     <span style="font-weight:700; color:var(--accent-blue)">${Math.floor(totalTime / 60)}시간 ${totalTime % 60}분</span>
                 </div>
             </div>
@@ -1294,7 +1302,7 @@
                             <input type="text" class="input-stop-name" 
                                 data-point-id="${id}"
                                 value="${state.customNames[id] || point.name}" 
-                                style="font-weight:700; background:transparent; border:1px solid transparent; color:inherit; width:100%; padding:2px 4px; border-radius:4px; font-size:inherit; transition:border-color 0.2s;"
+                                style="font-weight:700; background:transparent; border:1px solid transparent; color:var(--text-primary); width:100%; padding:2px 4px; border-radius:4px; font-size:inherit; transition:border-color 0.2s;"
                                 onfocus="this.style.borderColor='var(--accent-green)'"
                                 onblur="this.style.borderColor='transparent'">
                         </td>
@@ -1513,6 +1521,287 @@
         els.toast.textContent = msg;
         els.toast.classList.add('show');
         toastTimer = setTimeout(() => els.toast.classList.remove('show'), 3000);
+    }
+
+    // ===== Save/Load Schedule =====
+    function initSaveSchedule() {
+        if (els.saveScheduleBtn) {
+            els.saveScheduleBtn.addEventListener('click', showSaveModal);
+        }
+        if (els.confirmSaveBtn) {
+            els.confirmSaveBtn.addEventListener('click', saveSchedule);
+        }
+        if (els.scheduleNameInput) {
+            els.scheduleNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') saveSchedule();
+            });
+        }
+    }
+
+    function showSaveModal() {
+        // Check if there's something to save
+        if (!state.departure && !state.arrival) {
+            showToast('⚠️ 저장할 일정이 없습니다. 경로를 먼저 설정해주세요.');
+            return;
+        }
+        els.saveScheduleModal.classList.remove('hidden');
+        // Auto-suggest name
+        const now = new Date();
+        const prefix = `${now.getMonth() + 1}/${now.getDate()}`;
+        const route = state.departure ? state.departure.name : '';
+        els.scheduleNameInput.value = `${prefix} ${route} 방문`;
+        els.scheduleNameInput.select();
+        setTimeout(() => els.scheduleNameInput.focus(), 100);
+    }
+
+    function saveSchedule() {
+        const name = els.scheduleNameInput.value.trim();
+        if (!name) {
+            showToast('⚠️ 일정 이름을 입력해주세요.');
+            return;
+        }
+
+        // Gather stayDurations from DOM
+        const waypointsEls = els.waypointsContainer.querySelectorAll('.waypoint-item');
+        const stayDurations = Array.from(waypointsEls).map(el => 
+            parseInt(el.querySelector('.stay-duration-input').value) || 0
+        );
+
+        const scheduleData = {
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+            name: name,
+            savedAt: new Date().toISOString(),
+            departure: state.departure,
+            arrival: state.arrival,
+            waypoints: state.waypoints.map(wp => ({...wp})),
+            departureTime: els.departureTimeInput.value,
+            contacts: {...state.contacts},
+            customNames: {...state.customNames},
+            segmentBreaks: {...state.segmentBreaks},
+            segmentRemarks: {...state.segmentRemarks},
+            lastSegments: state.lastSegments.map(s => ({...s})),
+            stayDurations: stayDurations,
+            itineraryHtml: els.itineraryContainer.innerHTML
+        };
+
+        const saved = JSON.parse(localStorage.getItem('visit_schedules') || '[]');
+        saved.unshift(scheduleData);
+        localStorage.setItem('visit_schedules', JSON.stringify(saved));
+
+        els.saveScheduleModal.classList.add('hidden');
+        renderSavedSchedules();
+        showToast(`✅ "${name}" 일정이 저장되었습니다!`);
+    }
+
+    function loadSchedule(id) {
+        const saved = JSON.parse(localStorage.getItem('visit_schedules') || '[]');
+        const schedule = saved.find(s => s.id === id);
+        if (!schedule) {
+            showToast('❌ 저장된 일정을 찾을 수 없습니다.');
+            return;
+        }
+
+        // 1. Reset current state
+        resetAll();
+
+        // 2. Restore state values
+        state.departure = schedule.departure;
+        state.arrival = schedule.arrival;
+        state.contacts = schedule.contacts || {};
+        state.customNames = schedule.customNames || {};
+        state.segmentBreaks = schedule.segmentBreaks || {};
+        state.segmentRemarks = schedule.segmentRemarks || {};
+        state.lastSegments = schedule.lastSegments || [];
+
+        // 3. Restore departure time
+        if (schedule.departureTime) {
+            els.departureTimeInput.value = schedule.departureTime;
+        }
+
+        // 4. Restore departure input
+        if (state.departure) {
+            els.departureInput.value = state.departure.name;
+            els.departureInput.classList.add('has-value');
+            els.departureInfo.textContent = state.departure.address;
+            els.departureInfo.classList.add('has-info');
+        }
+
+        // 5. Restore arrival input
+        if (state.arrival) {
+            els.arrivalInput.value = state.arrival.name;
+            els.arrivalInput.classList.add('has-value');
+            els.arrivalInfo.textContent = state.arrival.address;
+            els.arrivalInfo.classList.add('has-info');
+        }
+
+        // 6. Restore waypoints
+        state.waypoints = [];
+        state.waypointCounter = 0;
+        if (schedule.waypoints && schedule.waypoints.length > 0) {
+            schedule.waypoints.forEach((wp, i) => {
+                state.waypointCounter++;
+                const id = 'wp_' + state.waypointCounter;
+                const wpData = { id, name: wp.name, address: wp.address, lat: wp.lat, lng: wp.lng };
+                state.waypoints.push(wpData);
+
+                const stayVal = schedule.stayDurations && schedule.stayDurations[i] !== undefined 
+                    ? schedule.stayDurations[i] : 60;
+
+                const wpEl = document.createElement('div');
+                wpEl.className = 'route-item waypoint-item draggable';
+                wpEl.dataset.waypointId = id;
+                wpEl.setAttribute('draggable', 'true');
+                wpEl.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="route-marker">
+                        <div class="marker-line marker-line-top"></div>
+                        <div class="marker-dot waypoint-dot"></div>
+                        <div class="marker-line"></div>
+                    </div>
+                    <div class="waypoint-input-group">
+                        <div class="waypoint-header">
+                            <label>경유지 ${i + 1}</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <div class="time-input-wrapper">
+                                    <span>체류:</span>
+                                    <input type="number" class="stay-duration-input" value="${stayVal}" min="0" step="10">
+                                    <span>분</span>
+                                </div>
+                                <button class="btn-remove-waypoint" data-id="${id}" title="삭제">✕</button>
+                            </div>
+                        </div>
+                        <div class="search-wrapper">
+                            <input type="text" class="location-input has-value" value="${wp.name}" placeholder="경유 장소를 검색하세요" autocomplete="off">
+                            <div class="search-dropdown"></div>
+                        </div>
+                        <div class="location-info has-info">${wp.address}</div>
+                    </div>
+                `;
+
+                els.waypointsContainer.appendChild(wpEl);
+
+                // Setup search for this waypoint
+                const wpInput = wpEl.querySelector('.location-input');
+                const wpDropdown = wpEl.querySelector('.search-dropdown');
+                const wpInfo = wpEl.querySelector('.location-info');
+
+                setupSearch(wpInput, wpDropdown, (place) => {
+                    wpData.name = place.name;
+                    wpData.address = place.address;
+                    wpData.lat = place.lat;
+                    wpData.lng = place.lng;
+                    if (wpInput._setSearchValue) {
+                        wpInput._setSearchValue(place.name);
+                    } else {
+                        wpInput.value = place.name;
+                    }
+                    wpInput.classList.add('has-value');
+                    wpInfo.textContent = place.address;
+                    wpInfo.classList.add('has-info');
+                    updateButtonStates();
+                    updateMap();
+                });
+
+                // Remove button
+                wpEl.querySelector('.btn-remove-waypoint').addEventListener('click', () => {
+                    removeWaypoint(id, wpEl);
+                });
+            });
+        }
+
+        // 7. Restore itinerary HTML
+        if (schedule.itineraryHtml) {
+            els.itineraryContainer.innerHTML = schedule.itineraryHtml;
+            
+            // Re-bind event listeners for itinerary inputs
+            els.itineraryContainer.querySelectorAll('.input-contact').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const pointId = e.target.dataset.pointId;
+                    state.contacts[pointId] = e.target.value;
+                });
+            });
+            els.itineraryContainer.querySelectorAll('.input-travel-remark').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const segId = e.target.dataset.segmentId;
+                    state.segmentRemarks[segId] = e.target.value;
+                });
+            });
+            els.itineraryContainer.querySelectorAll('.input-travel-break').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const segId = e.target.dataset.segmentId;
+                    state.segmentBreaks[segId] = parseInt(e.target.value) || 0;
+                    calculateRoute();
+                });
+            });
+            els.itineraryContainer.querySelectorAll('.input-stop-name').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const pointId = e.target.dataset.pointId;
+                    state.customNames[pointId] = e.target.value;
+                    els.itineraryContainer.querySelectorAll('.travel-stop-label').forEach(label => {
+                        if (label.dataset.pointId === pointId) {
+                            label.textContent = e.target.value;
+                        }
+                    });
+                });
+            });
+        }
+
+        // 8. Update button states and map
+        updateButtonStates();
+        updateMap();
+
+        showToast(`📂 "${schedule.name}" 일정을 불러왔습니다!`);
+    }
+
+    function deleteSchedule(id, event) {
+        event.stopPropagation();
+        const saved = JSON.parse(localStorage.getItem('visit_schedules') || '[]');
+        const idx = saved.findIndex(s => s.id === id);
+        if (idx === -1) return;
+        const name = saved[idx].name;
+        saved.splice(idx, 1);
+        localStorage.setItem('visit_schedules', JSON.stringify(saved));
+        renderSavedSchedules();
+        showToast(`🗑️ "${name}" 일정이 삭제되었습니다.`);
+    }
+
+    // Expose for inline onclick
+    window._loadSchedule = loadSchedule;
+    window._deleteSchedule = deleteSchedule;
+
+    function renderSavedSchedules() {
+        const list = els.savedSchedulesList;
+        if (!list) return;
+        const saved = JSON.parse(localStorage.getItem('visit_schedules') || '[]');
+
+        if (saved.length === 0) {
+            list.innerHTML = `
+                <div class="saved-empty">
+                    <div class="saved-empty-icon">📭</div>
+                    <p>저장된 일정이 없습니다.<br>경로 계산 후 💾 저장을 눌러보세요.</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = saved.map(s => {
+            const date = new Date(s.savedAt);
+            const dateStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+            const dep = s.departure ? s.departure.name : '?';
+            const arr = s.arrival ? s.arrival.name : '?';
+            const wpCount = s.waypoints ? s.waypoints.length : 0;
+            return `
+                <div class="saved-schedule-card" onclick="window._loadSchedule('${s.id}')">
+                    <div class="schedule-name">${s.name}</div>
+                    <div class="schedule-route">${dep} → ${wpCount > 0 ? wpCount + '곳 경유 → ' : ''}${arr}</div>
+                    <div class="schedule-meta">
+                        <span>📅 ${dateStr}</span>
+                        <span>🕐 출발 ${s.departureTime || '07:00'}</span>
+                    </div>
+                    <button class="btn-delete-schedule" onclick="window._deleteSchedule('${s.id}', event)" title="삭제">✕</button>
+                </div>
+            `;
+        }).join('');
     }
 
     // ===== Start =====
