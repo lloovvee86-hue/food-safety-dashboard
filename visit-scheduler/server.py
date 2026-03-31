@@ -1,7 +1,12 @@
+import os
+import json
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
-import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 # Enable CORS for the frontend
@@ -10,6 +15,16 @@ CORS(app)
 # Store API credentials (you can switch these to env vars later)
 KAKAO_JS_KEY = os.environ.get('KAKAO_JS_KEY', 'd83678527e52f4d753df486ac01f7d0c')
 KAKAO_REST_KEY = os.environ.get('KAKAO_REST_KEY', '007cb32ee7d003fec1bd6fc308b7ece7')
+
+
+# File paths
+BASE_ENT_FILE = 'enterprise_directory.json'
+CUSTOM_ENT_FILE = 'custom_enterprise.json'
+
+# Initialize custom directory if not exists
+if not os.path.exists(CUSTOM_ENT_FILE):
+    with open(CUSTOM_ENT_FILE, 'w', encoding='utf-8') as f:
+        json.dump([], f)
 
 @app.after_request
 def add_header(response):
@@ -57,6 +72,56 @@ def get_directions():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/enterprise/list', methods=['GET'])
+def list_enterprise():
+    try:
+        base_data = []
+        if os.path.exists(BASE_ENT_FILE):
+            with open(BASE_ENT_FILE, 'r', encoding='utf-8') as f:
+                base_data = json.load(f)
+        
+        custom_data = []
+        if os.path.exists(CUSTOM_ENT_FILE):
+            with open(CUSTOM_ENT_FILE, 'r', encoding='utf-8') as f:
+                custom_data = json.load(f)
+        
+        # Merge lists, avoiding duplicates if necessary (using name+address as key)
+        seen = set()
+        merged = []
+        
+        for item in base_data + custom_data:
+            key = f"{item.get('name')}|{item.get('address')}"
+            if key not in seen:
+                seen.add(key)
+                merged.append(item)
+                
+        return jsonify({'documents': merged, 'custom_count': len(custom_data)}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/enterprise/add', methods=['POST'])
+def add_enterprise():
+    try:
+        new_entry = request.json
+        if not new_entry or 'name' not in new_entry or 'address' not in new_entry:
+            return jsonify({'error': 'Invalid data'}), 400
+        
+        custom_data = []
+        if os.path.exists(CUSTOM_ENT_FILE):
+            with open(CUSTOM_ENT_FILE, 'r', encoding='utf-8') as f:
+                custom_data = json.load(f)
+        
+        # Check for duplication
+        exists = any(e['name'] == new_entry['name'] and e['address'] == new_entry['address'] for e in custom_data)
+        if not exists:
+            custom_data.append(new_entry)
+            with open(CUSTOM_ENT_FILE, 'w', encoding='utf-8') as f:
+                json.dump(custom_data, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({'status': 'success', 'count': len(custom_data)}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/search', methods=['GET'])
 def search_places():
     query = request.args.get('query')
@@ -74,44 +139,39 @@ def search_places():
     documents = []
     try:
         kw_res = requests.get(keyword_url, params={'query': query}, headers=headers)
+        print(f"DEBUG: Keyword search status: {kw_res.status_code}")
         if kw_res.status_code == 200:
-            documents.extend(kw_res.json().get('documents', []))
+            kw_data = kw_res.json()
+            documents.extend(kw_data.get('documents', []))
+            print(f"DEBUG: Keyword search found {len(kw_data.get('documents', []))} results")
+        else:
+            print(f"DEBUG: Keyword search failed: {kw_res.text}")
         
-        # 2. Try Address Search fallback (Continue if results < 5)
-        if len(documents) < 5:
-            addr_url = 'https://dapi.kakao.com/v2/local/search/address.json'
-            ad_res = requests.get(addr_url, params={'query': query}, headers=headers)
-            if ad_res.status_code == 200:
-                ad_data = ad_res.json()
-                for ad in ad_data.get('documents', []):
-                    # Coordinate-based de-duplication
-                    if not any(abs(float(d['x']) - float(ad['x'])) < 0.0001 and abs(float(d['y']) - float(ad['y'])) < 0.0001 for d in documents):
-                        documents.append({
-                            'place_name': ad.get('address_name'),
-                            'address_name': ad.get('address_name'),
-                            'road_address_name': ad.get('road_address', {}).get('address_name', ''),
-                            'x': ad.get('x'),
-                            'y': ad.get('y'),
-                            'category_group_name': '주소/건물'
-                        })
+        # 2. Try Address Search fallback (Especially for specific addresses like 'Migeum-ro 114')
+        addr_url = 'https://dapi.kakao.com/v2/local/search/address.json'
+        ad_res = requests.get(addr_url, params={'query': query}, headers=headers)
+        print(f"DEBUG: Address search status: {ad_res.status_code}")
+        if ad_res.status_code == 200:
+            ad_data = ad_res.json()
+            ad_docs = ad_data.get('documents', [])
+            print(f"DEBUG: Address search found {len(ad_docs)} results")
+            for ad in ad_docs:
+                # Coordinate-based de-duplication to avoid messy results
+                is_duplicate = any(abs(float(d.get('x', 0)) - float(ad.get('x', 0))) < 0.0001 and 
+                                 abs(float(d.get('y', 0)) - float(ad.get('y', 0))) < 0.0001 for d in documents)
+                if not is_duplicate:
+                    documents.append({
+                        'place_name': ad.get('address_name'),
+                        'address_name': ad.get('address_name'),
+                        'road_address_name': ad.get('road_address', {}).get('address_name', '') if ad.get('road_address') else '',
+                        'x': ad.get('x'),
+                        'y': ad.get('y'),
+                        'category_group_name': '주소/건물'
+                    })
+        else:
+            print(f"DEBUG: Address search failed: {ad_res.text}")
             
-        # 3. Business Suffix Fallback (Continue if results < 5)
-        if len(documents) < 5:
-            first_word = query.split()[0]
-            suffixes = ['공장', '본사', '지점', '사무소', '연구소', '물류', '센터']
-            for suffix in suffixes:
-                if len(documents) >= 10: break
-                s_query = f"{first_word} {suffix}"
-                s_res = requests.get(keyword_url, params={'query': s_query}, headers=headers)
-                if s_res.status_code == 200:
-                    s_data = s_res.json()
-                    other_parts = query.split()[1:]
-                    for doc in s_data.get('documents', []):
-                        full_text = (doc['place_name'] + ' ' + doc['address_name'] + ' ' + doc.get('road_address_name', '')).lower()
-                        if all(p.lower() in full_text for p in other_parts):
-                            if not any(abs(float(d['x']) - float(doc['x'])) < 0.0001 and abs(float(d['y']) - float(doc['y'])) < 0.0001 for d in documents):
-                                documents.append(doc)
-
+        print(f"DEBUG: Total documents being returned: {len(documents)}")
         return jsonify({'documents': documents, 'meta': {'total_count': len(documents)}}), 200
         
     except Exception as e:

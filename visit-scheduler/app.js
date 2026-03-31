@@ -16,6 +16,7 @@
         segmentBreaks: {}, // { "fromName-toName": minutes }
         segmentRemarks: {}, // { "fromName-toName": text }
         lastSegments: [], 
+        detailedPath: [], // Array of kakao.maps.LatLng for the full actual route
         mapLoaded: false,
         map: null,
         markers: [],
@@ -257,16 +258,24 @@
             state.markers.push(overlay);
         });
 
-        // Draw polylines between consecutive points
+        // Draw polylines
         if (points.length >= 2) {
-            const path = points.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+            let path = [];
+            if (state.detailedPath && state.detailedPath.length > 0) {
+                // Use actual driving path from API
+                path = state.detailedPath;
+            } else {
+                // Fallback to straight lines
+                path = points.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+            }
+
             const polyline = new kakao.maps.Polyline({
                 map: state.map,
                 path: path,
-                strokeColor: '#2ecc71',
-                strokeWeight: 3,
+                strokeColor: '#2980b9', // More professional blue
+                strokeWeight: 5,
                 strokeOpacity: 0.8,
-                strokeStyle: 'shortdash'
+                strokeStyle: (state.detailedPath && state.detailedPath.length > 0) ? 'solid' : 'shortdash'
             });
             state.polylines.push(polyline);
         }
@@ -329,30 +338,39 @@
     let ENTERPRISE_DIRECTORY = [];
 
     // Load enterprise directory from JSON + localStorage
+    // Load enterprise directory from Server (Shared) + localStorage (Legacy/Local)
     async function loadEnterpriseDirectory() {
-        // 1. Load from JSON file (base directory)
+        // 1. Load from Server API (Shared directory)
         try {
-            const res = await fetch('enterprise_directory.json');
+            const res = await fetch('http://127.0.0.1:5000/api/enterprise/list');
             if (res.ok) {
                 const data = await res.json();
-                ENTERPRISE_DIRECTORY = data.filter(e => e.lat !== 0 && e.lng !== 0);
-                console.log(`[기업주소록] JSON에서 ${ENTERPRISE_DIRECTORY.length}건 로드`);
+                if (data.documents) {
+                    ENTERPRISE_DIRECTORY = data.documents.filter(e => e.lat && e.lng);
+                    console.log(`[기업주소록] 서버에서 ${ENTERPRISE_DIRECTORY.length}건 로드 (공유됨)`);
+                }
+            } else {
+                // Fallback to local file if server API not available
+                const fileRes = await fetch('enterprise_directory.json');
+                if (fileRes.ok) {
+                    const data = await fileRes.json();
+                    ENTERPRISE_DIRECTORY = data.filter(e => e.lat !== 0 && e.lng !== 0);
+                    console.log(`[기업주소록] 로컬 파일에서 ${ENTERPRISE_DIRECTORY.length}건 로드`);
+                }
             }
         } catch (e) {
-            console.warn('[기업주소록] JSON 로드 실패', e);
+            console.warn('[기업주소록] 데이터 로드 실패', e);
         }
 
-        // 2. Merge with localStorage (user-added entries)
+        // 2. Merge with localStorage (Keep local entries too)
         try {
             const stored = JSON.parse(localStorage.getItem('enterprise_custom') || '[]');
             stored.forEach(entry => {
-                // Avoid duplicates by checking name+address
                 const exists = ENTERPRISE_DIRECTORY.some(e => 
                     e.name === entry.name && e.address === entry.address
                 );
                 if (!exists) ENTERPRISE_DIRECTORY.push(entry);
             });
-            if (stored.length) console.log(`[기업주소록] localStorage에서 ${stored.length}건 병합`);
         } catch (e) {}
     }
 
@@ -396,45 +414,80 @@
 
             const entry = { name, address, lat, lng, category };
             
-            // Save to localStorage
+            // 1. Save to Server (Shared)
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/enterprise/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(entry)
+                });
+                if (res.ok) {
+                    console.log('[기업주소록] 서버 저장 성공');
+                }
+            } catch (e) {
+                console.error('[기업주소록] 서버 저장 실패', e);
+            }
+
+            // 2. Save to localStorage (Local fallback)
             const stored = JSON.parse(localStorage.getItem('enterprise_custom') || '[]');
-            stored.push(entry);
-            localStorage.setItem('enterprise_custom', JSON.stringify(stored));
+            const exists = stored.some(e => e.name === entry.name && e.address === entry.address);
+            if (!exists) {
+                stored.push(entry);
+                localStorage.setItem('enterprise_custom', JSON.stringify(stored));
+            }
             
-            // Add to runtime directory
-            ENTERPRISE_DIRECTORY.push(entry);
+            // 3. Add to current runtime directory if not exists
+            const runtimeExists = ENTERPRISE_DIRECTORY.some(e => e.name === entry.name && e.address === entry.address);
+            if (!runtimeExists) {
+                ENTERPRISE_DIRECTORY.push(entry);
+            }
 
             // Clear inputs
             nameInput.value = '';
             addrInput.value = '';
             catInput.value = '';
 
-            showToast(`✅ "${name}" 등록 완료!`);
+            showToast(`✅ "${name}" 전사 공유 주소록에 등록되었습니다!`);
             renderEnterpriseList();
         });
     }
 
     function geocodeAddress(address) {
+        console.log(`[Geocode] Attempting to geocode: "${address}"`);
         return new Promise((resolve, reject) => {
-            if (window.kakao?.maps?.services) {
-                const geocoder = new kakao.maps.services.Geocoder();
-                geocoder.addressSearch(address, (result, status) => {
-                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
-                        resolve({ lat: parseFloat(result[0].y), lng: parseFloat(result[0].x) });
-                    } else {
-                        reject(new Error('Geocode failed'));
-                    }
-                });
-            } else {
-                // Fallback: use REST API via proxy
+            const useRestFallback = () => {
+                console.log(`[Geocode] Falling back to REST API via proxy for: "${address}"`);
                 fetch(`http://127.0.0.1:5000/api/search?query=${encodeURIComponent(address)}`)
                     .then(r => r.json())
                     .then(data => {
                         if (data.documents?.length) {
+                            console.log(`[Geocode] Success via REST API:`, data.documents[0]);
                             resolve({ lat: parseFloat(data.documents[0].y), lng: parseFloat(data.documents[0].x) });
-                        } else reject(new Error('No results'));
+                        } else {
+                            console.warn(`[Geocode] REST API returned no results for: "${address}"`);
+                            reject(new Error('No results from REST API'));
+                        }
                     })
-                    .catch(reject);
+                    .catch(err => {
+                        console.error(`[Geocode] REST API error:`, err);
+                        reject(err);
+                    });
+            };
+
+            if (window.kakao?.maps?.services?.Geocoder) {
+                const geocoder = new kakao.maps.services.Geocoder();
+                geocoder.addressSearch(address, (result, status) => {
+                    console.log(`[Geocode] SDK addressSearch status: ${status}`, result);
+                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
+                        resolve({ lat: parseFloat(result[0].y), lng: parseFloat(result[0].x) });
+                    } else {
+                        console.warn(`[Geocode] SDK failed or no results. Status: ${status}. Trying REST fallback...`);
+                        useRestFallback();
+                    }
+                });
+            } else {
+                console.warn(`[Geocode] Kakao Geocoder SDK not loaded. Trying REST fallback...`);
+                useRestFallback();
             }
         });
     }
@@ -996,30 +1049,31 @@
 
             const data = await response.json();
 
-            if (!response.ok || (data.routes && data.routes[0].result_code === 104)) {
-                console.error("API Error:", data);
-                throw new Error(data.msg || '카카오 API 호출 실패');
+            if (!response.ok || (data.routes && data.routes[0].result_code !== 0)) {
+                console.error("API Error or No Route:", data);
+                showToast('⚠️ 경로를 찾을 수 없습니다. (직선 거리로 계산합니다)');
+                fallbackCalculateRoute(points);
+                return;
             }
 
             const route = data.routes[0];
             const totalDistance = route.summary.distance / 1000; // m -> km
             const totalTime = Math.round(route.summary.duration / 60); // sec -> min
 
-            // Extract path from all sections and roads
-            const fullPath = [];
+            // Extract Detailed Path (Vertexes) for the map
+            state.detailedPath = [];
             route.sections.forEach(section => {
                 section.roads.forEach(road => {
-                    for (let i = 0; i < road.vertexes.length; i += 2) {
-                        fullPath.push({
-                            x: road.vertexes[i],
-                            y: road.vertexes[i + 1]
-                        });
+                    if (road.vertexes) {
+                        for (let i = 0; i < road.vertexes.length; i += 2) {
+                            state.detailedPath.push(new kakao.maps.LatLng(road.vertexes[i+1], road.vertexes[i]));
+                        }
                     }
                 });
             });
 
-            // Draw real polyline and map markers
-            drawRealRouteOnMap(fullPath);
+            // Update Map with detailed path
+            updateMap();
 
             // Generate segments breakdown from sections
             const startTimeStr = els.departureTimeInput.value;
