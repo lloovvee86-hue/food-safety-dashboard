@@ -69,17 +69,35 @@
     };
 
     // ===== Init =====
-    function init() {
+    async function init() {
         setupEventListeners();
         setupEnterpriseUI();
         initDragAndDrop();
         initCopy();
         initSaveSchedule();
+        
+        // Fetch API keys from server first
+        try {
+            const configRes = await fetch('http://127.0.0.1:5000/api/config');
+            if (configRes.ok) {
+                const config = await configRes.json();
+                if (config.KAKAO_JS_KEY) {
+                    state.apiKey = config.KAKAO_JS_KEY;
+                    console.log('[Config] JS Key loaded from server');
+                }
+            }
+        } catch (e) {
+            console.warn('[Config] Failed to fetch server config', e);
+        }
+
         loadEnterpriseDirectory();
         renderSavedSchedules();
+        
         if (state.apiKey) {
             hideModal();
             loadKakaoMapScript();
+        } else {
+            showModal();
         }
     }
 

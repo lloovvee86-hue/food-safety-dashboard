@@ -16,6 +16,14 @@ CORS(app)
 KAKAO_JS_KEY = os.environ.get('KAKAO_JS_KEY', 'd83678527e52f4d753df486ac01f7d0c')
 KAKAO_REST_KEY = os.environ.get('KAKAO_REST_KEY', '007cb32ee7d003fec1bd6fc308b7ece7')
 
+print(f"DEBUG: JS Key Loaded: {KAKAO_JS_KEY[:5]}...")
+print(f"DEBUG: REST Key Loaded: {KAKAO_REST_KEY[:5]}...")
+
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    return jsonify({
+        'KAKAO_JS_KEY': KAKAO_JS_KEY
+    })
 
 # File paths
 BASE_ENT_FILE = 'enterprise_directory.json'
