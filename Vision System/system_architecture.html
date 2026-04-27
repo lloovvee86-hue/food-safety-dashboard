@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 비전 시스템 전체 구성도 - Pulmuone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00813D; /* Pulmuone Green */
+            --secondary: #8CC63F;
+            --bg: #F0F4F1;
+            --card: #FFFFFF;
+            --text: #2D3436;
+            --accent: #E67E22;
+            --line: #BDC3C7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 1100px;
+            position: relative;
+            gap: 40px;
+        }
+
+        /* Locations */
+        .location {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 30px;
+            width: 45%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .location:hover {
+            border-color: var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .location h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Items */
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #F9F9F9;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #EEE;
+        }
+
+        .item-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .item-text h3 {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+
+        .item-text p {
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        /* Connection Line */
+        .network-bridge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .arrow {
+            width: 100%;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, var(--line), var(--line) 10px, transparent 10px, transparent 20px);
+            position: relative;
+        }
+
+        .arrow::after {
+            content: '🌐';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+        }
+
+        .network-text {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--line);
+        }
+
+        /* Noti Bubble */
+        .noti-flow {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #eee;
+        }
+
+        .noti-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            margin-top: 60px;
+            color: #b2bec3;
+            font-size: 0.9rem;
+        }
+
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0px rgba(0, 129, 61, 0.4); }
+            100% { box-shadow: 0 0 0 20px rgba(0, 129, 61, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Vision AI Factory Architecture</h1>
+        <p>오송 연구소 원격 관리 및 현장 실시간 누락 감지 시스템</p>
+    </div>
+
+    <div class="container">
+        <!-- Remote Lab -->
+        <div class="location">
+            <h2>📍 오송 연구소 <span class="badge">원격 관리</span></h2>
+            <div class="item">
+                <div class="item-icon">💻</div>
+                <div class="item-text">
+                    <h3>담당자 노트북 (Dev PC)</h3>
+                    <p>AI 모델 학습, 코드 관리, 원격 모니터링</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="item-icon">🤖</div>
+                <div class="item-text">
+                    <h3>ML 워크플로우</h3>
+                    <p>Vertex AI / Roboflow 기반 모델 성능 고도화</p>
+                </div>
+            </div>
+            <div class="noti-flow">
+                <div class="noti-item">📱 실시간 텔레그램 알림 수신</div>
+            </div>
+        </div>
+
+        <!-- Connection -->
+        <div class="network-bridge">
+            <div class="arrow"></div>
+            <p class="network-text">AnyDesk / SSH / VPN</p>
+        </div>
+
+        <!-- Factory -->
+        <div class="location">
+            <h2>📍 생산 현장 <span class="badge" style="background:var(--accent)">실시간 가동</span></h2>
+            <div class="item pulse">
+                <div class="item-icon">📷</div>
+                <div class="item-text">
+                    <h3>OAK-D S2 PoE</h3>
+                    <p>Luxonis | IP67 방수/방진</p>
+                    <p style="color:var(--primary); font-weight:700;">💰 약 664,520원</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="item-icon">🔌</div>
+                <div class="item-text">
+                    <h3>ipTIME PoE 인젝터-GIGA-S</h3>
+                    <p>IEEE 802.3af/at (48V)</p>
+                    <p style="color:var(--primary); font-weight:700;">💰 15,900원</p>
+                </div>
+            </div>
+            <div class="item">
+                <div class="item-icon">🖥️</div>
+                <div class="item-text">
+                    <h3>ASUS NUC 15 Pro+</h3>
+                    <p>Intel Ultra 9 285H (16G/512G)</p>
+                    <p style="color:var(--primary); font-weight:700;">💰 약 1,677,060원</p>
+                </div>
+            </div>
+            <div class="noti-flow">
+                <div class="noti-item" style="color:var(--primary)">🚨 현장 경광등 & 부저 작동 (누락 시)</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Pulmuone Vision AI Project | AI 기술 도입 프로젝트팀
+    </footer>
+
+</body>
+</html>

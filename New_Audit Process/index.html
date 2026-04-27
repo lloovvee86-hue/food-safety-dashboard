@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신규 Audit 업무 자동화 통합 제안서 - Pulmuone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4FA72A;
+            --primary-light: #76C84D;
+            --secondary: #1E293B;
+            --accent: #3B82F6; /* AI Blue */
+            --bg: #F8FAFC;
+            --glass: rgba(255, 255, 255, 0.95);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+            --text-dark: #1E293B;
+            --text-light: #64748B;
+            --grid-line: #E2E8F0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-outfit { font-family: 'Outfit', sans-serif; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
+
+        /* Hero & Header */
+        .header {
+            background: linear-gradient(135deg, #4FA72A 0%, #1E293B 100%);
+            color: white; padding: 60px 0; text-align: center;
+            border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
+            margin-bottom: 40px;
+        }
+        .header h1 { font-size: 3rem; font-weight: 800; margin-bottom: 10px; }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+
+        /* Mode Toggle */
+        .mode-selector {
+            display: flex; justify-content: center; gap: 15px; margin: -40px 0 60px;
+            position: relative; z-index: 10;
+        }
+        .mode-btn {
+            padding: 15px 40px; border-radius: 50px; border: none; cursor: pointer;
+            font-weight: 700; font-size: 1.1rem; transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: white; color: var(--text-light);
+        }
+        .mode-btn.active {
+            background: var(--primary); color: white;
+            transform: scale(1.05); box-shadow: 0 8px 25px rgba(79, 167, 42, 0.3);
+        }
+
+        /* Section Title */
+        .section-title { margin-bottom: 40px; text-align: left; position: relative; }
+        .section-title h2 { font-size: 2.2rem; font-weight: 800; color: var(--secondary); margin-bottom: 15px; }
+        .section-title p { color: var(--text-light); font-size: 1.1rem; }
+
+        /* Grid Diagram */
+        .diagram-wrapper {
+            background: white; border-radius: 20px; box-shadow: var(--shadow);
+            overflow-x: auto; border: 1px solid var(--grid-line); margin-bottom: 60px;
+            position: relative;
+        }
+        .diagram-grid { display: grid; min-width: 1200px; transition: all 0.5s ease; }
+        
+        .diagram-grid.pb-mode { grid-template-columns: 160px repeat(4, 1fr); }
+        .diagram-grid.mg-mode { grid-template-columns: 160px repeat(3, 1fr); }
+
+        .grid-header {
+            background: var(--secondary); color: white; padding: 15px;
+            text-align: center; font-weight: 700; font-size: 1.1rem;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .grid-sidebar {
+            background: #F8FAFC; padding: 20px 10px; font-weight: 700; font-size: 0.95rem;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            border-bottom: 1px solid var(--grid-line); border-right: 2px solid var(--grid-line);
+        }
+        .grid-cell {
+            padding: 15px; border-bottom: 1px solid var(--grid-line); border-right: 1px solid var(--grid-line);
+            min-height: 120px; background: #ffffff; position: relative;
+        }
+
+        /* Nodes */
+        .node {
+            padding: 12px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+            text-align: center; border: 1.5px solid #E2E8F0; margin-bottom: 8px;
+            background: white; position: relative; z-index: 2;
+        }
+        .node.ai { border-color: var(--accent); background: #EFF6FF; color: var(--accent); }
+        .node.tech { border-color: #10B981; background: #ECFDF5; color: #047857; }
+        .node.portal { border-color: #F97316; background: #FFF7ED; color: #C2410C; }
+        
+        .ai-assist {
+            display: inline-block; background: var(--accent); color: white;
+            font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-bottom: 5px;
+        }
+
+        /* Arrows */
+        .arrow-path {
+            position: absolute; color: #CBD5E1; font-size: 1.2rem; z-index: 1; pointer-events: none;
+        }
+
+        /* Risk Banner */
+        .risk-banner {
+            padding: 25px 40px; border-radius: 15px; margin-bottom: 60px;
+            display: flex; align-items: center; gap: 20px; color: white;
+            background: linear-gradient(90deg, #BE123C 0%, #E11D48 100%);
+        }
+        .risk-banner.mg { background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%); }
+
+        /* Exceptions Table */
+        .info-section { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-bottom: 80px; }
+        .info-card { background: white; padding: 40px; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--grid-line); }
+        .info-card h3 { font-size: 1.6rem; color: var(--primary); margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        .req-list { list-style: none; }
+        .req-list li { padding: 12px 15px; background: #F8FAFC; border-radius: 10px; margin-bottom: 10px; font-weight: 600; font-size: 0.95rem; }
+        
+        .exc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .exc-table th { background: #F1F5F9; padding: 12px; text-align: left; border: 1px solid var(--grid-line); }
+        .exc-table td { padding: 10px; border: 1px solid var(--grid-line); }
+
+        /* Alternative Docs */
+        .doc-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 100px; }
+        .doc-card { background: white; padding: 25px; border-radius: 18px; border: 1px solid var(--grid-line); position: relative; }
+        .doc-label { 
+            position: absolute; top: -12px; left: 20px; background: var(--primary); color: white;
+            width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800;
+        }
+        .doc-card h4 { margin: 10px 0 10px; font-size: 1.1rem; color: var(--secondary); }
+        .doc-card ul { list-style: none; font-size: 0.8rem; color: var(--text-light); }
+        .doc-card li { margin-bottom: 6px; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1200px) { .container { padding: 0 20px; } }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <h1 class="font-outfit">Audit Automation 360°</h1>
+            <p>Smart Quality Hub: PB & MG Integration Model</p>
+        </div>
+    </header>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('PB')">PB 공급 프로세스</button>
+        <button class="mode-btn" onclick="setMode('MG')">MG 공급 프로세스</button>
+    </div>
+
+    <div class="container">
+        <!-- 1. Process Flow -->
+        <section class="diagram-section">
+            <div class="section-title">
+                <h2>Step 01. AI 통합 프로세스 맵</h2>
+                <p id="mode-desc">구매운영본부 주관의 PB 공급 협력기업 Audit 워크플로우</p>
+            </div>
+
+            <div class="diagram-wrapper">
+                <div id="diag-grid" class="diagram-grid pb-mode">
+                    <!-- Table Header -->
+                    <div class="grid-header" style="background: white;"></div>
+                    <div class="grid-header">MKT / PTC</div>
+                    <div class="grid-header pb-only">구매운영본부</div>
+                    <div class="grid-header">품질기술센터</div>
+                    <div class="grid-header">협력기업</div>
+
+                    <!-- Row 1: 사전준비 -->
+                    <div class="grid-sidebar">사전준비</div>
+                    <div class="grid-cell">
+                        <div class="node">신규업체 발굴 &<br>소싱포탈 정보 등록</div>
+                    </div>
+                    <div class="grid-cell pb-only">
+                        <div class="ai-assist">AI-Auto</div>
+                        <div class="node ai">사전정보 메일 발송<br>(소싱포탈 가입 안내)</div>
+                    </div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell">
+                        <div class="node">소싱포탈 가입</div>
+                    </div>
+
+                    <!-- Row 2: 의뢰 -->
+                    <div class="grid-sidebar">의뢰</div>
+                    <div class="grid-cell">
+                        <div class="node">신규 Audit 의뢰</div>
+                    </div>
+                    <div class="grid-cell pb-only">
+                        <div class="ai-assist">AI-Assist</div>
+                        <div class="node ai">의뢰 정보 확인 &<br>의뢰서 자동 생성</div>
+                    </div>
+                    <div class="grid-cell mg-only-cell hidden">
+                         <div class="ai-assist">AI-Assist</div>
+                        <div class="node ai">MKT 의뢰서 생성 가이드</div>
+                    </div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell">
+                         <div class="ai-assist">AI-Auto</div>
+                        <div class="node ai">의뢰서 작성 알림 발송</div>
+                    </div>
+
+                    <!-- Row 3: 검토 -->
+                    <div class="grid-sidebar">검토</div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell pb-only"></div>
+                    <div class="grid-cell">
+                        <div class="ai-assist">AI-OCR</div>
+                        <div class="node ai">제출 서류 실시간 검증<br>(진위/누락 체크)</div>
+                        <div class="node tech">신규의뢰서 검토</div>
+                    </div>
+                    <div class="grid-cell">
+                        <div class="node">신류의뢰서 작성</div>
+                    </div>
+
+                    <!-- Row 4: 접수 -->
+                    <div class="grid-sidebar">접수</div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell pb-only"></div>
+                    <div class="grid-cell">
+                        <div class="ai-assist">AI-Logic</div>
+                        <div class="node ai">접수 판정 추천<br>(반려/재검/완료/취소)</div>
+                        <div class="node tech">최종 접수 여부 결정</div>
+                    </div>
+                    <div class="grid-cell">
+                         <div style="font-size: 0.6rem; color: #BE123C; font-weight: 700; margin-bottom: 5px;">※ 1개월 초과 시 자동취소</div>
+                        <div class="node standard">접수 결과 대기</div>
+                    </div>
+
+                    <!-- Row 5: 수립 -->
+                    <div class="grid-sidebar">수립</div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell pb-only"></div>
+                    <div class="grid-cell">
+                        <div class="ai-assist">AI-Scheduler</div>
+                        <div class="node ai">Audit 일정 추천</div>
+                        <div class="node tech">일정 확정 및 통보</div>
+                    </div>
+                    <div class="grid-cell">
+                        <div class="node">안내메일 수신</div>
+                    </div>
+
+                    <!-- Row 6: Audit -->
+                    <div class="grid-sidebar">Audit</div>
+                    <div class="grid-cell">
+                        <div class="node">결과 공유 &<br>부적합 사항 개선 관리</div>
+                    </div>
+                    <div class="grid-cell pb-only">
+                        <div class="node">신규업체 선정<br>or 재의뢰</div>
+                    </div>
+                    <div class="grid-cell">
+                         <div class="ai-assist">AI-Report</div>
+                        <div class="node ai">CAPA 가이드 생성</div>
+                        <div class="node tech">Audit 시행 & 결과 등록</div>
+                    </div>
+                    <div class="grid-cell"></div>
+                </div>
+            </div>
+
+            <div id="risk-banner" class="risk-banner">
+                <div style="font-size: 2.5rem;">⚠️</div>
+                <div>
+                    <h3 class="font-outfit">중요 정책: 점검 결과 '거래불가' 시 <span id="ban-period">1년</span> 이내 재의뢰 불가</h3>
+                    <p>본 정책은 품질 리스크 방지를 위한 핵심 규정으로 AI Agent가 기한을 엄격히 추적 관리합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Selection Criteria & Exceptions -->
+        <section class="info-section">
+            <div class="info-card">
+                <h3 class="font-outfit">🏢 신규 Audit 필수 대상</h3>
+                <ul class="req-list">
+                    <li>신규 진입 / 거래 업체</li>
+                    <li>(기존) 공장 변경 or 이전</li>
+                    <li>(기존) 신규 공장동 추가</li>
+                    <li>식품유형 · 제조라인 추가/변경</li>
+                    <li>신규 Audit 후 1년 경과 업체</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3 class="font-outfit">✅ 신규 Audit 예외 기준</h3>
+                <table class="exc-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>조건 1</th>
+                            <th>조건 2</th>
+                            <th>예외 조치</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>식품유형 추가</td><td>동일 라인/공정</td><td>HACCP 인증 완료</td><td>대체서류 (A/B/C)</td></tr>
+                        <tr><td>제조라인 추가</td><td>동일 유형/공정</td><td>이전 심사 범위 내</td><td>대체서류 (B/D)</td></tr>
+                        <tr><td>제조공정 추가</td><td>동일 유형/라인</td><td>이전 심사 범위 내</td><td>대체서류 (B)</td></tr>
+                        <tr><td>CCP 공정 추가</td><td>동일 유형/라인</td><td>HACCP 인증 완료</td><td>대체서류 (A/B/C)</td></tr>
+                        <tr><td>거래부문 변경</td><td>동일 유형/라인/공정</td><td>-</td><td>심사 미실시</td></tr>
+                    </tbody>
+                </table>
+                <p style="font-size: 0.75rem; color: #BE123C; margin-top: 15px; font-weight: 700;">※ 서면 제출 불가 또는 미흡 시 신규 Audit 대상으로 즉시 전환</p>
+            </div>
+        </section>
+
+        <!-- 3. Alternative Docs -->
+        <div class="section-title">
+            <h2>대체 서류 가이드 List</h2>
+            <p>예외 조치 승인 시 제출해야 하는 필수 서류 목록</p>
+        </div>
+        <div class="doc-list">
+            <div class="doc-card">
+                <div class="doc-label">A</div>
+                <h4>유형/CCP 인증</h4>
+                <ul>
+                    <li>HACCP 인증서 (신규유형)</li>
+                    <li>자가품질검사 (최근 3회)</li>
+                </ul>
+            </div>
+            <div class="doc-card">
+                <div class="doc-label">B</div>
+                <h4>동일성 확인</h4>
+                <ul>
+                    <li>제조공정도, 평면도 비교</li>
+                    <li>제품컨셉보드</li>
+                    <li>비살균 액란 여부 확인</li>
+                </ul>
+            </div>
+            <div class="doc-card">
+                <div class="doc-label">C</div>
+                <h4>HACCP 상세</h4>
+                <ul>
+                    <li>HACCP Plan</li>
+                    <li>CCP 유효성 평가 결과</li>
+                    <li>검교정/모니터링 결과</li>
+                </ul>
+            </div>
+            <div class="doc-card">
+                <div class="doc-label">D</div>
+                <h4>위생/설비 관리</h4>
+                <ul>
+                    <li>세척소독기준</li>
+                    <li>설비 표면오염도 결과</li>
+                    <li>제조설비/라인 사진</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setMode(mode) {
+            const grid = document.getElementById('diag-grid');
+            const desc = document.getElementById('mode-desc');
+            const banner = document.getElementById('risk-banner');
+            const banPeriod = document.getElementById('ban-period');
+            const pbItems = document.querySelectorAll('.pb-only');
+            const mgItems = document.querySelectorAll('.mg-only-cell');
+            const btns = document.querySelectorAll('.mode-btn');
+
+            btns.forEach(b => b.classList.remove('active'));
+
+            if (mode === 'PB') {
+                grid.className = 'diagram-grid pb-mode';
+                desc.innerText = '구매운영본부 주관의 PB 공급 협력기업 Audit 워크플로우';
+                banner.classList.remove('mg');
+                banPeriod.innerText = '1년';
+                pbItems.forEach(el => el.classList.remove('hidden'));
+                mgItems.forEach(el => el.classList.add('hidden'));
+                btns[0].classList.add('active');
+            } else {
+                grid.className = 'diagram-grid mg-mode';
+                desc.innerText = 'MKT 주관의 MG 제조처 Audit 워크플로우';
+                banner.classList.add('mg');
+                banPeriod.innerText = '6개월';
+                pbItems.forEach(el => el.classList.add('hidden'));
+                mgItems.forEach(el => el.classList.remove('hidden'));
+                btns[1].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+{
+  "project_name": "New Audit Process Automation",
+  "objective": "Automate and optimize the Pulmuone New Audit Request process using AI Agents to reduce review lead time and minimize human error regarding hurdle conditions.",
+  "current_process": {
+    "phases": [
+      {
+        "step": 1,
+        "action": "Stakeholder identifies supplier and requests Sourcing Portal signup.",
+        "responsible": "MKT/PTC"
+      },
+      {
+        "step": 2,
+        "action": "Supplier registers/updates information on Sourcing Portal.",
+        "responsible": "Supplier"
+      },
+      {
+        "step": 3,
+        "action": "Create Audit Request on Portal (Logic: PB via Messenger/Email, MG direct).",
+        "responsible": "MKT/Purchasing"
+      },
+      {
+        "step": 4,
+        "action": "Submit Audit Request Form with supporting documents.",
+        "responsible": "Supplier"
+      },
+      {
+        "step": 5,
+        "action": "Review submitted documents against Hurdle conditions.",
+        "responsible": "S&A Team (Quality Technology Center)"
+      },
+      {
+        "step": 6,
+        "action": "Conduct site audit and final determination.",
+        "responsible": "S&A Team"
+      }
+    ]
+  },
+  "hurdle_conditions": [
+    {
+      "id": "H01",
+      "name": "Quality Certification",
+      "requirement": "Mandatory HACCP certification (GMP for health functional foods)."
+    },
+    {
+      "id": "H02",
+      "name": "Foreign Object Control",
+      "requirement": "Operation of metal detectors or X-ray equipment is mandatory."
+    },
+    {
+      "id": "H03",
+      "name": "Raw Material Regulation",
+      "requirement": "Strict prohibition of unpasteurized liquid egg usage."
+    },
+    {
+      "id": "H04",
+      "name": "Building Legality",
+      "requirement": "No illegal or undeclared temporary buildings/structures."
+    },
+    {
+      "id": "H05",
+      "name": "Subcontracting Prohibition",
+      "requirement": "Direct manufacturing only; subcontracted production is prohibited."
+    }
+  ],
+  "automation_strategy": {
+    "agent_roles": [
+      {
+        "phase": "Identification",
+        "action": "Monitor requests and automatically trigger portal signup guides."
+      },
+      {
+        "phase": "Submission Support",
+        "action": "Real-time OCR verification of HACCP/Equipment certs and feedback."
+      },
+      {
+        "phase": "Pre-Screening",
+        "action": "Automatically validate hurdle conditions before final submission."
+      },
+      {
+        "phase": "Review Assistance",
+        "action": "Generate summary reports for S&A team, highlighting priority risks."
+      },
+      {
+        "phase": "Lifecycle Management",
+        "action": "Track 1-year re-audit ban for failed suppliers and manage timelines."
+      }
+    ]
+  },
+  "business_rules": {
+    "failure_penalty": "If 'Unacceptable', 1-year ban on same manufacturing site re-request.",
+    "request_window": "Audit request recommended within 1 month of production readiness.",
+    "exception_rule": "Skip audit if same process/line with verified evidence or recognized certs (List A)."
+  }
+}

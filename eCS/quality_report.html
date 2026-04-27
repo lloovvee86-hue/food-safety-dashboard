@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026년 1분기 품질 지표 마감 보고서</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #00813D;
+            /* Pulmuone Green */
+            --secondary-color: #8CC63F;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --bg-light: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --accent-red: #E74C3C;
+            --accent-blue: #3498DB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            -webkit-print-color-adjust: exact;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            background: var(--card-bg);
+            padding: 20mm;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+
+        .title-group h1 {
+            font-size: 22pt;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .title-group p {
+            font-size: 10pt;
+            color: var(--text-light);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: var(--bg-light);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .summary-card h3 {
+            font-size: 9pt;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+
+        .summary-card .value {
+            font-size: 16pt;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .summary-card .trend {
+            font-size: 8.5pt;
+            margin-top: 3px;
+        }
+
+        .trend.down {
+            color: var(--primary-color);
+        }
+
+        .trend.up {
+            color: var(--accent-red);
+        }
+
+        section {
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 14pt;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .chart-box {
+            background: var(--bg-light);
+            padding: 12px;
+            border-radius: 10px;
+            height: 220px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5pt;
+            margin-top: 5px;
+        }
+
+        th {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px;
+            text-align: center;
+        }
+
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr.group-row td {
+            background: #f1f3f5;
+            font-weight: 700;
+            text-align: left;
+            padding-left: 15px;
+        }
+
+        .analysis-box {
+            background: rgba(140, 198, 63, 0.08);
+            border: 1px dashed var(--secondary-color);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+
+        .analysis-box ul {
+            list-style-type: none;
+        }
+
+        .analysis-box li {
+            font-size: 9.5pt;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.5;
+        }
+
+        .analysis-box li strong:first-of-type {
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 160px;
+            color: var(--primary-color);
+        }
+
+        .analysis-box li::before {
+            content: '•';
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 8pt;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: 700;
+        }
+
+        .badge-good {
+            background: #e6f4ea;
+            color: #1e8e3e;
+        }
+
+        .badge-warning {
+            background: #fef7e0;
+            color: #f9ab00;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .a4-page {
+                margin: 0;
+                box-shadow: none;
+                padding: 10mm;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a4-page">
+        <header>
+            <div class="title-group">
+                <h1>2026년 1분기 품질 지표 마감 보고서</h1>
+                <p>대상 기간: 2026.01 ~ 2026.03 | 비교군: 2025년 전체 평균 & 1분기 동기</p>
+            </div>
+            <div class="logo">
+                <img src="풀무원.png" alt="Pulmuone Logo" height="25">
+            </div>
+        </header>
+
+        <section>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>전체 VOC (월평균)</h3>
+                    <div class="value">359.7건</div>
+                    <div class="trend down">▼ 7.0% (vs 25 avg)</div>
+                </div>
+                <div class="summary-card">
+                    <h3>전체 PPM</h3>
+                    <div class="value">15.89</div>
+                    <div class="trend down">▼ 12.3% (vs 25 avg)</div>
+                </div>
+                <div class="summary-card">
+                    <h3>중대 불만 건수</h3>
+                    <div class="value">199건</div>
+                    <div class="trend down">▼ 21.0% (vs 25 Q1)</div>
+                </div>
+                <div class="summary-card">
+                    <h3>생산성 향상</h3>
+                    <div class="value">+6.4%</div>
+                    <div class="trend up">▲ vs 25 Q1</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>부문별 상세 실적 비교</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="2">부문 (25년 → 26년)</th>
+                        <th colspan="2">2026년 1분기 실적</th>
+                        <th colspan="2">전년 동기(25 Q1) 대비</th>
+                        <th colspan="2">전년 평균(25 Avg) 대비</th>
+                    </tr>
+                    <tr>
+                        <th>VOC</th>
+                        <th>PPM</th>
+                        <th>VOC (%)</th>
+                        <th>PPM (%)</th>
+                        <th>VOC (%)</th>
+                        <th>PPM (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="group-row">
+                        <td colspan="7">품질기술팀</td>
+                    </tr>
+                    <tr>
+                        <td>품질기술팀 계</td>
+                        <td>675건</td>
+                        <td>13.22</td>
+                        <td style="color: var(--primary-color)">-15.6%</td>
+                        <td style="color: var(--primary-color)">-17.2%</td>
+                        <td style="color: var(--primary-color)">-11.8%</td>
+                        <td style="color: var(--primary-color)">-11.0%</td>
+                    </tr>
+                    <tr class="group-row">
+                        <td colspan="7">식중독예방관리팀</td>
+                    </tr>
+                    <tr>
+                        <td>식중독예방관리팀 계</td>
+                        <td>404건</td>
+                        <td>23.98</td>
+                        <td style="color: var(--accent-red)">+13.8%</td>
+                        <td style="color: var(--primary-color)">-7.7%</td>
+                        <td style="color: var(--primary-color)">-2.7%</td>
+                        <td style="color: var(--accent-red)">+2.2%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <div class="chart-container">
+                <div class="chart-box">
+                    <canvas id="teamVocChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="teamPpmChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>중점 관리 제조처 현황 (PPM 상위 5개사)</h2>
+            <div class="analysis-box" style="background: rgba(231, 76, 60, 0.05); border-color: var(--accent-red);">
+                <table style="margin-top: 0; background: transparent;">
+                    <thead>
+                        <tr>
+                            <th style="background: var(--accent-red);">순위</th>
+                            <th style="background: var(--accent-red); text-align: left;">제조처명</th>
+                            <th style="background: var(--accent-red);">VOC 건수</th>
+                            <th style="background: var(--accent-red);">PPM 지수</th>
+                            <th style="background: var(--accent-red);">관리 상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td style="text-align: left;">(주)비케이바이오</td>
+                            <td>3건</td>
+                            <td style="font-weight: 700; color: var(--accent-red);">1,733.1</td>
+                            <td><span class="badge badge-warning">집행 관리</span></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td style="text-align: left;">(주)김치나라</td>
+                            <td>22건</td>
+                            <td style="font-weight: 700; color: var(--accent-red);">1,171.3</td>
+                            <td><span class="badge badge-warning">집행 관리</span></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td style="text-align: left;">우리델리카</td>
+                            <td>90건</td>
+                            <td style="font-weight: 700;">235.5</td>
+                            <td><span class="badge badge-good">모니터링</span></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td style="text-align: left;">롯데웰푸드(주)</td>
+                            <td>3건</td>
+                            <td style="font-weight: 700;">214.0</td>
+                            <td><span class="badge badge-good">모니터링</span></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td style="text-align: left;">(주)오에스피</td>
+                            <td>11건</td>
+                            <td style="font-weight: 700;">145.4</td>
+                            <td><span class="badge badge-good">모니터링</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="font-size: 8.5pt; color: var(--accent-red); margin-top: 10px;">* PPM 1,000 이상 업체는 즉각적인 품질 공정 감사 및 개선 대책 수립이 권고됩니다.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>분석 및 제안</h2>
+            <div class="analysis-box">
+                <ul>
+                    <li><strong>제조처별 품질 양극화 대응</strong>: (주)비케이바이오 및 (주)김치나라 등 <strong>PPM 1,000을 초과</strong>하는 고위험 제조처에 대한 현장 점검 및 원인 분석이 2분기 최우선 과제입니다.</li>
+                    <li><strong>탁월한 중대 관리</strong>: 전반적인 중대 불만 감소세는 안정적이나, 특정 소수 업체의 높은 PPM이 전체 지표에 악영향을 미치지 않도록 개별 업체 관리에 집중해야 합니다.</li>
+                    <li><strong>전년 연평균 대비 비교</strong>: 식중독예방관리팀의 PPM이 연평균 대비 소폭(+2.2%) 높은 상태이므로, 2분기에는 25년 하반기 수준의 품질 복원을 목표로 정밀 모니터링이 필요합니다.</li>
+                    <li><strong>중대 관리 지표</strong>: 양 부문 합산 중대 불만이 전년 동기 대비 21% 감소(248건 -> 199건)한 점은 고무적이며, 이를 2분기에도 유지하는
+                        것이 핵심입니다.</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>본 보고서는 품질 지표 분석 데이터를 바탕으로 AI가 자동 생성하였습니다. | 기준일: 2026-04-15</p>
+        </footer>
+    </div>
+
+    <script>
+        // Team VOC Comparison Chart
+        const vocCtx = document.getElementById('teamVocChart').getContext('2d');
+        new Chart(vocCtx, {
+            type: 'bar',
+            data: {
+                labels: ['품질기술팀', '식중독예방관리팀'],
+                datasets: [
+                    { label: '25 Q1', data: [800, 355], backgroundColor: '#BDC3C7' },
+                    { label: '25 연평균', data: [765, 415], backgroundColor: '#7F8C8D' },
+                    { label: '26 Q1', data: [675, 404], backgroundColor: '#00813D' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: '부문별 VOC 발생 건수 비교' } }
+            }
+        });
+
+        // Team PPM Comparison Chart
+        const ppmCtx = document.getElementById('teamPpmChart').getContext('2d');
+        new Chart(ppmCtx, {
+            type: 'bar',
+            data: {
+                labels: ['품질기술팀', '식중독예방관리팀'],
+                datasets: [
+                    { label: '25 Q1 PPM', data: [15.96, 25.97], backgroundColor: '#8CC63F' },
+                    { label: '26 Q1 PPM', data: [13.22, 23.98], backgroundColor: '#00813D' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: '전년 동기 대비 PPM 개선 현황' } }
+            }
+        });
+    </script>
+</body>
+
+</html>

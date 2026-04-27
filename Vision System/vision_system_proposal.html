@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 비전 시스템 구축 제안서 - Pulmuone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00813D;
+            --secondary: #8CC63F;
+            --dark: #2D3436;
+            --light: #F8F9FA;
+            --accent: #E67E22;
+            --border: #E0E0E0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        body {
+            background-color: #F1F2F6;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .paper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 60px 80px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: var(--primary);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .title-area h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            letter-spacing: -1px;
+            margin-bottom: 5px;
+        }
+
+        .title-area p {
+            color: #636e72;
+            font-weight: 600;
+        }
+
+        .logo-area {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #b2bec3;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: var(--dark);
+            border-left: 5px solid var(--secondary);
+            padding-left: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            color: #4b4b4b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: #f1f3f5;
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .price-col {
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .total-row {
+            background: var(--primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .total-row td {
+            border: none;
+            padding: 15px;
+        }
+
+        .benefit-list {
+            list-style: none;
+        }
+
+        .benefit-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .benefit-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .footer-note {
+            margin-top: 50px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+            font-style: italic;
+            color: #636e72;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .paper {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="paper">
+        <header>
+            <div class="title-area">
+                <h1>AI 비전 기반 식품 패키징<br>자동 검수 시스템 구축 제안</h1>
+                <p>Digital Transformation for Quality Excellence</p>
+            </div>
+            <div class="logo-area">
+                제안부서: 품질기술센터<br>
+                일자: 2026. 04. 16
+            </div>
+        </header>
+
+        <section>
+            <h2>01. 추진 배경 및 목적</h2>
+            <p>식품 패키징 공정에서 발생하는 <span class="highlight">유부, 후리가케, 참기름 등 구성품 누락</span>을 실시간으로 감지하여 품질 불량을 제로화하고, 오송 연구소
+                중심의 원격 관리 체계를 구축하여 운영 효율성을 극대화합니다.</p>
+        </section>
+
+        <section>
+            <h2>02. 시스템 아키텍처 (Remote-to-Edge)</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>💻 원격 관리 (오송 연구소)</h3>
+                    <p>대표님 노트북을 통해 AI 모델 학습, 시스템 원격 모니터링 및 업데이트를 수행합니다. 현장 방문 없이도 모든 제어가 가능합니다.</p>
+                </div>
+                <div class="card">
+                    <h3>📷 실시간 검수 (생산 현장)</h3>
+                    <p>최첨단 OAK-D S2 PoE 카메라가 현장에서 직접 AI 연산을 수행하며, 누락 발생 시 즉각적으로 대응합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>03. 핵심 도입 장비 (Hardware Summary)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>모델명 및 주요 사양</th>
+                        <th class="price-col">도입 비용 (출처: Naver/Mouser)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>AI 카메라</strong></td>
+                        <td><strong>Luxonis OAK-D S2 PoE</strong><br><small>IP67 등급 방수/방진, 엣지 AI 내장</small></td>
+                        <td class="price-col">664,520원</td>
+                    </tr>
+                    <tr>
+                        <td><strong>호스트 PC</strong></td>
+                        <td><strong>ASUS NUC 15 Pro+</strong><br><small>Intel Ultra 9 285H, 16G RAM, 512G SSD</small>
+                        </td>
+                        <td class="price-col">1,677,060원</td>
+                    </tr>
+                    <tr>
+                        <td><strong>전원 공급</strong></td>
+                        <td><strong>ipTIME PoE 인젝터-GIGA-S</strong><br><small>IEEE 802.3af/at 기가비트 지원</small></td>
+                        <td class="price-col">15,900원</td>
+                    </tr>
+                    <tr>
+                        <td><strong>부자재</strong></td>
+                        <td><strong>CAT.6 랜선 및 경광등/부저</strong><br><small>설치 케이블 및 현장 알림 장비</small></td>
+                        <td class="price-col">약 50,000원</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="2">총합계 (Estimated Total)</td>
+                        <td class="price-col">약 2,407,480원</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>04. 사후 조치 및 알림 프로세스</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>🚨 현장 조치 (Local)</h3>
+                    <p>누락 감지 즉시 미니 PC와 연결된 <span class="highlight">경광등과 부저</span>를 가동하여 현장 작업자에게 즉시 알림을 줍니다.</p>
+                </div>
+                <div class="card">
+                    <h3>📱 원격 보고 (Remote)</h3>
+                    <p><span class="highlight">텔레그램(Telegram)</span> 봇을 통해 담당자 폰으로 누락 시점의 사진과 알림을 실시간 전송합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>05. 기대 효과</h2>
+            <ul class="benefit-list">
+                <li><strong>품질 혁신</strong>: 24시간 무중단 검수로 구성품 누락으로 인한 고객 불만(VOC) 원천 차단</li>
+                <li><strong>운영 최적화</strong>: 오송-현장 간 원격 연결로 현장 관리 인건비 및 출장 비용 절감</li>
+                <li><strong>데이터 자산화</strong>: 누락 로그 및 이미지 데이터를 축적하여 데이터 중심의 공정 개선 가능</li>
+            </ul>
+        </section>
+
+        <div class="footer-note">
+            "본 시스템 구축을 통해 실시간 품질 관리 최적화 및 스마트 팩토리 구현을 실현하겠습니다."<br>
+            <strong>품질기술센터</strong>
+        </div>
+    </div>
+
+</body>
+
+</html>
