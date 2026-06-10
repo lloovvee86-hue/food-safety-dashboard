@@ -93,12 +93,13 @@ def scrape_korea_food_safety():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
+        completed_keywords = []
         for keyword in keywords:
             print(f"Scraping for keyword: {keyword}")
-            page.goto("https://www.foodsafetykorea.go.kr/portal/specialinfo/searchInfoProduct.do?menu_grp=MENU_NEW04&menu_no=2815", wait_until="domcontentloaded", timeout=60000)
-            page.wait_for_timeout(3000)
-
             try:
+                page.goto("https://www.foodsafetykorea.go.kr/portal/specialinfo/searchInfoProduct.do?menu_grp=MENU_NEW04&menu_no=2815", wait_until="domcontentloaded", timeout=60000)
+                page.wait_for_timeout(3000)
+
                 # 1. 검색어 입력 (제품명 입력란) - id가 prd_nm 임
                 search_input = page.locator('#prd_nm')
                 search_input.fill("") # Clear before filling, just in case
@@ -121,6 +122,7 @@ def scrape_korea_food_safety():
                 print(f"[{keyword}] Expected total count: {total_count}")
                 if total_count == 0:
                     print(f"No results found for {keyword}")
+                    completed_keywords.append(keyword)
                     continue
                 
                 # 3. 50개씩 보기로 변경 (드롭다운 누르고 50개씩 선택)
@@ -145,79 +147,88 @@ def scrape_korea_food_safety():
                     
                 page.wait_for_timeout(2000) # 렌더링 후 안정화를 위한 2초 대기
                 
-            except Exception as e:
-                print(f"Error initiating search for {keyword}: {e}")
-                continue
-
-            # 페이지 순회하며 크롤링
-            page_num = 1
-            keyword_results_count = 0
-            while True:
-                print(f"Scraping page {page_num} for {keyword}")
-                try:
-                    # 각 페이지별로 스크린샷 캡처 (전체 화면)
-                    screenshot_path = f"{keyword}_page{page_num}.png"
-                    
-                    # 로딩 중인지 확인 (번호 셀에 'loading' 텍스트가 사라질 때까지 대기)
+                # 페이지 순회하며 크롤링
+                page_num = 1
+                keyword_results_count = 0
+                while True:
+                    print(f"Scraping page {page_num} for {keyword}")
                     try:
-                        page.wait_for_function('!document.querySelector("#tbl_prd_list tbody tr td").innerText.toLowerCase().includes("loading")', timeout=45000)
+                        # 각 페이지별로 스크린샷 캡처 (전체 화면)
+                        screenshot_path = f"{keyword}_page{page_num}.png"
+                        
+                        # 로딩 중인지 확인 (번호 셀에 'loading' 텍스트가 사라질 때까지 대기)
+                        try:
+                            page.wait_for_function('!document.querySelector("#tbl_prd_list tbody tr td").innerText.toLowerCase().includes("loading")', timeout=45000)
+                        except Exception as e:
+                            print("Timeout waiting for 'loading...' to disappear, proceeding anyway.", e)
+                            
+                        page.screenshot(path=screenshot_path, full_page=True)
+                        print(f"Screenshot saved: {screenshot_path}")
+
+                        rows = page.locator("#tbl_prd_list tbody tr")
+                        count = rows.count()
+                        for i in range(count):
+                            row = rows.nth(i)
+                            
+                            # 식품안전나라 모바일/PC 반응형 테이블 구조 반영 (span.table_txt 내부에 데이터 존재)
+                            cols = row.locator("td")
+                            
+                            col_texts = []
+                            for j in range(cols.count()):
+                                td = cols.nth(j)
+                                # 모바일 구조(span.table_txt)이거나 일반 텍스트일 수 있음
+                                if td.locator('span.table_txt').count() > 0:
+                                    col_texts.append(td.locator('span.table_txt').first.inner_text().strip())
+                                else:
+                                    col_texts.append(td.inner_text().strip())
+                            
+                            if len(col_texts) > 1 and "조회된 데이터가 없습니다" not in col_texts[0] and "조회결과가 없습니다" not in col_texts[0]:
+                                results.append([keyword] + col_texts)
+                                keyword_results_count += 1
                     except Exception as e:
-                        print("Timeout waiting for 'loading...' to disappear, proceeding anyway.", e)
+                        print("Error parsing rows:", e)
+                        raise e
                         
-                    page.screenshot(path=screenshot_path, full_page=True)
-                    print(f"Screenshot saved: {screenshot_path}")
+                    # 모든 건수를 수집했으면 조기 종료
+                    if keyword_results_count >= total_count:
+                        print(f"Finished collecting all {keyword_results_count} items for {keyword}")
+                        break
 
-                    rows = page.locator("#tbl_prd_list tbody tr")
-                    count = rows.count()
-                    for i in range(count):
-                        row = rows.nth(i)
+                    # 다음 페이지 버튼 처리
+                    try:
+                        next_page_num = page_num + 1
+                        # title 속성이 없을 수 있으므로 텍스트로도 같이 찾기
+                        next_btn = page.locator(f'a.page-link[title="{next_page_num}"]')
+                        if next_btn.count() == 0:
+                            next_btn = page.locator(f'a.page-link:text-is("{next_page_num}")')
                         
-                        # 식품안전나라 모바일/PC 반응형 테이블 구조 반영 (span.table_txt 내부에 데이터 존재)
-                        cols = row.locator("td")
-                        
-                        col_texts = []
-                        for j in range(cols.count()):
-                            td = cols.nth(j)
-                            # 모바일 구조(span.table_txt)이거나 일반 텍스트일 수 있음
-                            if td.locator('span.table_txt').count() > 0:
-                                col_texts.append(td.locator('span.table_txt').first.inner_text().strip())
-                            else:
-                                col_texts.append(td.inner_text().strip())
-                        
-                        if len(col_texts) > 1 and "조회된 데이터가 없습니다" not in col_texts[0] and "조회결과가 없습니다" not in col_texts[0]:
-                            results.append([keyword] + col_texts)
-                            keyword_results_count += 1
-                except Exception as e:
-                    print("Error parsing rows:", e)
-                    break
-                    
-                # 모든 건수를 수집했으면 조기 종료
-                if keyword_results_count >= total_count:
-                    print(f"Finished collecting all {keyword_results_count} items for {keyword}")
-                    break
+                        # 현재 활성화된 다음 버튼이 있는지 확인
+                        if next_btn.count() > 0 and next_btn.first.is_visible():
+                            print(f"Moving to page {next_page_num}...")
+                            with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=45000):
+                                next_btn.first.click()
+                            page.wait_for_timeout(2000) # 버튼 클릭 후 렌더링 대기
+                            page_num += 1
+                        else:
+                            break # 다음 페이지가 없으면 종료
+                    except Exception as e:
+                        print("Pagination ended:", e)
+                        break
 
-                # 다음 페이지 버튼 처리
-                try:
-                    next_page_num = page_num + 1
-                    # title 속성이 없을 수 있으므로 텍스트로도 같이 찾기
-                    next_btn = page.locator(f'a.page-link[title="{next_page_num}"]')
-                    if next_btn.count() == 0:
-                        next_btn = page.locator(f'a.page-link:text-is("{next_page_num}")')
-                    
-                    # 현재 활성화된 다음 버튼이 있는지 확인
-                    if next_btn.count() > 0 and next_btn.first.is_visible():
-                        print(f"Moving to page {next_page_num}...")
-                        with page.expect_response(lambda r: 'searchPrdList' in r.url and r.request.method == 'POST', timeout=45000):
-                            next_btn.first.click()
-                        page.wait_for_timeout(2000) # 버튼 클릭 후 렌더링 대기
-                        page_num += 1
-                    else:
-                        break # 다음 페이지가 없으면 종료
-                except Exception as e:
-                    print("Pagination ended:", e)
-                    break
+                completed_keywords.append(keyword)
+
+            except Exception as e:
+                print(f"❌ Error scraping {keyword}: {e}")
+                # 수집이 실패한 경우 completed_keywords에 넣지 않고 예외는 여기서만 잡고 진행
 
         browser.close()
+
+    # 모든 검색어가 완벽하게 수집되었는지 검증
+    all_success = (len(completed_keywords) == len(keywords))
+    if not all_success:
+        print(f"⚠️ 일부 검색어 수집 실패 (성공: {completed_keywords}). 변동 이력 및 CSV 저장을 중단합니다.")
+        # 실패한 키워드로 인해 잘못된 삭제 처리가 되는 것을 막기 위해 조기 종료
+        return
 
     # 변동 이력 비교 및 기록
     csv_headers = ["검색어", "번호", "품목보고번호", "업체명", "품목유형", "소비기한", "제품명", "분류"]
