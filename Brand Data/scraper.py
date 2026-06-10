@@ -2,8 +2,13 @@ import csv
 import time
 import os
 import glob
+import sys
 from datetime import datetime, timezone, timedelta
 from playwright.sync_api import sync_playwright
+
+# Windows 콘솔 인코딩 에러 방지
+if sys.platform.startswith('win'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 
 def load_previous_data(filepath):
