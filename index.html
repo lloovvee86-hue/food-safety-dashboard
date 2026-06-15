@@ -7,8 +7,6 @@
     <title>식품안전나라 제품명 브랜드 노출 현황</title>
     <!-- Modern Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -231,44 +229,14 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
-
-        /* Premium Link Button Styled like DX Slide Page 4 */
-        .dx-link-btn {
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #005A2B 0%, #62B325 100%);
-            color: #FFF;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-weight: 800;
-            font-size: 14px;
-            box-shadow: 0 4px 15px rgba(0, 90, 43, 0.2);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .dx-link-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(98, 179, 37, 0.4);
-            color: #FFF;
-        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; text-align: left; margin-bottom: 50px; animation: fadeInDown 0.8s ease-out;">
-            <div>
-                <h1 style="margin: 0 0 10px 0;">식품안전나라 제품명 브랜드 노출 현황</h1>
-                <p class="subtitle" style="margin: 0;">웹 스크래핑을 통한 브랜드별 제품 수집 현황 통계</p>
-            </div>
-            <div>
-                <a href="https://notebooklm.google.com/notebook/02a1ec5d-b552-4d12-b4e8-296a37918cc9" target="_blank" class="dx-link-btn">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> 실습용 NotebookLM 열기
-                </a>
-            </div>
+        <header>
+            <h1>식품안전나라 제품명 브랜드 노출 현황</h1>
+            <p class="subtitle">웹 스크래핑을 통한 브랜드별 제품 수집 현황 통계</p>
         </header>
 
         <div id="loading" class="loader"></div>

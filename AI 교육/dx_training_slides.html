@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>풀무원 협력사 품질 DX 역량 강화 교육</title>
+    <!-- Google Fonts: Inter & Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #62B325; /* 풀무원 그린 */
+            --primary-dark: #005A2B;
+            --secondary-color: #E29B00; /* 어두운 노란색 계열로 가독성 확보 */
+            --bg-light: #F4F7F6;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(0, 90, 43, 0.15);
+            --text-dark: #2D3748;
+            --text-muted: #5A6A80;
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #D6E0DC;
+            color: var(--text-dark);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 1080p 비율 강제 & 리사이징 컨테이너 */
+        #presentation-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+            transform-origin: center center;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            height: 80px;
+            padding: 0 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-area img.pulmuone-logo {
+            height: 38px;
+            object-fit: contain;
+        }
+
+        .logo-area .divider {
+            width: 1px;
+            height: 20px;
+            background-color: var(--card-border);
+        }
+
+        .logo-area .title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--primary-dark);
+        }
+
+        nav .nav-menu {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+        }
+
+        nav .nav-menu li {
+            font-size: 16px;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            border: 1px solid transparent;
+        }
+
+        nav .nav-menu li.active {
+            color: #FFF;
+            background-color: var(--primary-dark);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(0, 90, 43, 0.15);
+        }
+
+        nav .nav-menu li:hover:not(.active) {
+            color: var(--primary-dark);
+            background-color: rgba(98, 179, 37, 0.08);
+        }
+
+        /* 슬라이드 뷰포트 */
+        #slide-viewport {
+            flex: 1;
+            position: relative;
+            width: 100%;
+        }
+
+        /* 슬라이드 베이스 */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 50px 80px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(100px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 슬라이드별 백그라운드 이미지 설정 (밝기 보정을 위해 그라데이션 블렌딩 추가) */
+        .slide:nth-child(1) { background-image: linear-gradient(rgba(244, 247, 246, 0.88), rgba(244, 247, 246, 0.88)), url('image_a1d39f.jpg'); }
+        .slide:nth-child(2) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d3a5.jpg'); }
+        .slide:nth-child(3) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d3c0.jpg'); }
+        .slide:nth-child(4) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d3db.jpg'); }
+        .slide:nth-child(5) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d3e1.jpg'); }
+        .slide:nth-child(6) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d3fb.jpg'); }
+        .slide:nth-child(7) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d403.jpg'); }
+        .slide:nth-child(8) { background-image: linear-gradient(rgba(244, 247, 246, 0.92), rgba(244, 247, 246, 0.92)), url('image_a1d41f.jpg'); }
+        .slide:nth-child(9) { background-image: linear-gradient(rgba(244, 247, 246, 0.88), rgba(244, 247, 246, 0.88)), url('image_a1d43b.jpg'); }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        .slide.prev-slide {
+            transform: translateX(-100px);
+        }
+
+        /* 타이틀 스타일 */
+        .slide-header {
+            margin-bottom: 25px;
+        }
+
+        .slide-badge {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            padding: 4px 14px;
+            border-radius: 30px;
+            background-color: rgba(98, 179, 37, 0.15);
+            border: 1px solid rgba(98, 179, 37, 0.3);
+        }
+
+        .slide-title {
+            font-size: 40px;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            color: var(--primary-dark);
+        }
+
+        .slide-title span {
+            color: var(--primary-color);
+        }
+
+        /* 본문 콘텐츠 레이아웃 */
+        .slide-content {
+            flex: 1;
+            display: flex;
+            gap: 30px;
+            overflow: hidden;
+        }
+
+        /* 일반 그리드 카드 시스템 */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            width: 100%;
+            gap: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            width: 100%;
+            gap: 25px;
+        }
+
+        /* 카드 컴포넌트 */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+            transition: var(--transition-smooth);
+            box-shadow: 0 10px 25px rgba(0, 90, 43, 0.04);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 15px 35px rgba(0, 90, 43, 0.1);
+            background: #FFF;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 35px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .card-text strong {
+            color: var(--primary-dark);
+        }
+
+        /* 하이라이트 문구 */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(98, 179, 37, 0.15) 0%, rgba(0, 90, 43, 0.08) 100%);
+            border: 1px solid rgba(98, 179, 37, 0.4);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        /* 번호/리스트 스타일 */
+        .custom-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .custom-list li {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .custom-list li i {
+            color: var(--primary-color);
+            margin-top: 4px;
+        }
+
+        /* 1장 슬라이드 전용 (DX 1페이지 요약) */
+        .dx-summary-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .dx-hero-box {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 25px rgba(0, 90, 43, 0.04);
+        }
+
+        .dx-hero-badge {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .dx-hero-title {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+        }
+
+        .dx-hero-desc {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 90, 43, 0.02);
+        }
+
+        .stat-num {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 3px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* 슬라이드 0번 (커버) */
+        .cover-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cover-title {
+            font-size: 60px;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -2px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-dark) 30%, var(--primary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cover-subtitle {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        /* 2장 프롬프트 가이드 시각화 디자인 */
+        .prompt-template {
+            background: #F0F4F2;
+            border-radius: 12px;
+            padding: 18px;
+            font-family: 'Courier New', Courier, monospace;
+            border-left: 4px solid var(--primary-color);
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #2D3748;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .prompt-tag {
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+
+        /* 구조적 스텝 다이어그램 (NotebookLM용) */
+        .diagram-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            background: rgba(0, 90, 43, 0.03);
+            border: 1px dashed var(--primary-color);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .diagram-node {
+            background: #FFF;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .diagram-arrow {
+            color: var(--primary-color);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Antigravity 파이프라인 시각화 */
+        .pipeline-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+            background: #FFF;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+            background: var(--bg-light);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .pipeline-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-dark);
+            color: #FFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .pipeline-info {
+            flex: 1;
+        }
+
+        .pipeline-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .pipeline-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Power BI 흐름 시각화 */
+        .bi-flow-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            align-items: center;
+            gap: 10px;
+            margin-top: 25px;
+            background: #FFF;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+        }
+
+        .bi-flow-node {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        .bi-flow-node i {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .bi-flow-node h4 {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        /* 대조 엑셀 테이블 시각화 */
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+            margin-top: 10px;
+            background: #FFF;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #CBD5E0;
+        }
+
+        .excel-table th {
+            background: #EDF2F7;
+            color: #4A5568;
+            padding: 6px 10px;
+            font-weight: 700;
+            border: 1px solid #CBD5E0;
+        }
+
+        .excel-table td {
+            padding: 6px 10px;
+            border: 1px solid #E2E8F0;
+            color: #4A5568;
+        }
+
+        .excel-bad-merged {
+            background: #FEEBC8;
+            text-align: center;
+            font-weight: bold;
+            color: #C05621;
+        }
+
+        .excel-bad-empty {
+            background: #FFF5F5;
+        }
+
+        .excel-good-header {
+            background: #C6F6D5 !important;
+            color: #22543D !important;
+        }
+
+        /* 미니 대시보드 Mockup UI */
+        .mock-dashboard {
+            background: #FFF;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .mock-header {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mock-body {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 10px;
+        }
+
+        .mock-chart-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mock-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .mock-bar-label {
+            width: 45px;
+            text-align: right;
+            color: var(--text-muted);
+        }
+
+        .mock-bar-track {
+            flex: 1;
+            height: 8px;
+            background: #EDF2F7;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .mock-bar-fill {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .mock-kpi-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mock-kpi-card {
+            background: var(--bg-light);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .mock-kpi-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #E53E3E;
+        }
+
+        .mock-kpi-lbl {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        /* 푸터 영역 */
+        footer {
+            height: 80px;
+            padding: 0 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .footer-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-control {
+            background: #FFF;
+            border: 1px solid var(--card-border);
+            color: var(--primary-dark);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: var(--transition-smooth);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn-control:hover {
+            background-color: var(--primary-color);
+            color: #FFF;
+            border-color: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(98, 179, 37, 0.3);
+        }
+
+        .slide-counter {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: 1px;
+        }
+
+        .keyboard-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: #FFF;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+        }
+
+        .keyboard-hint kbd {
+            background: #E2E8F0;
+            color: #2D3748;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: inherit;
+            box-shadow: 0 2px 0 #CBD5E0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="presentation-container">
+        <!-- 상단 헤더 -->
+        <header>
+            <div class="logo-area">
+                <!-- 풀무원 공식 로고 이미지 로드 (위키백과 SVG를 폴백으로 설정하여 안정성 강화) -->
+                <img src="../BI-Dashboard/풀무원.png" alt="Pulmuone Logo" class="pulmuone-logo" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e0/Pulmuone_Logo.svg';">
+                <span class="title">Quality DX Portal</span>
+                <div class="divider"></div>
+                <span style="font-size: 14px; color: var(--text-muted); font-weight: 700;">협력기업 역량 강화 세미나</span>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item active" onclick="goToChapter(0)">Cover</li>
+                    <li class="nav-item" onclick="goToChapter(1)">1장. DX의 중요성</li>
+                    <li class="nav-item" onclick="goToChapter(2)">2장. AI 현업 활용</li>
+                    <li class="nav-item" onclick="goToChapter(5)">3장. Power BI 실무</li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- 슬라이드 본문 영역 -->
+        <div id="slide-viewport">
+
+            <!-- [슬라이드 0] COVER -->
+            <div class="slide active" data-chapter="0">
+                <div class="cover-slide">
+                    <div class="cover-subtitle">Pulmuone Co-Growth Seminar</div>
+                    <h1 class="cover-title">협력사 품질관리를 위한<br>DX & AI 실무 가이드</h1>
+                    <p style="font-size: 22px; color: var(--text-muted); max-width: 900px; margin: 0 auto 50px; line-height: 1.6; font-weight: 500;">
+                        품질 DX의 개념부터 생성형 AI 비서 활용법, 그리고 데이터를 직관적으로 시각화하는 Power BI 구축까지 하루 만에 마스터하기
+                    </p>
+                </div>
+            </div>
+
+            <!-- [슬라이드 1] 1장. DX가 무엇이고 왜 중요한가? (1페이지 요약형) -->
+            <div class="slide" data-chapter="1">
+                <div class="slide-header">
+                    <span class="slide-badge">Chapter 01</span>
+                    <h2 class="slide-title">디지털 전환(DX)이란 무엇이며, <span>왜 품질 관리의 필수 요소인가?</span></h2>
+                </div>
+                <div class="slide-content">
+                    <div class="dx-summary-layout">
+                        <!-- 좌측 메인 설명 영역 (콘텐츠 대폭 보강) -->
+                        <div class="dx-hero-box">
+                            <span class="dx-hero-badge">DEFINITIONS & NECESSITY</span>
+                            <h3 class="dx-hero-title">왜 중소기업일수록 DX가 필수인가?</h3>
+                            <p class="dx-hero-desc" style="font-size: 15.5px; line-height: 1.75; margin-bottom: 20px;">
+                                대기업에 비해 인력 유출 및 숙련도 공백이 심한 중소기업일수록, 개인의 기억이나 수기 기록이 아닌 <strong>'시스템 기반의 자동화'</strong>가 이루어져야 품질 사고로 인한 막대한 위약금 및 거래 중단 리스크를 방지할 수 있습니다. 
+                                이는 사치가 아닌, 최소 비용으로 최대 효과를 내는 고효율 <strong>생존 전략</strong>입니다.
+                            </p>
+                            
+                            <h4 style="font-size: 16px; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px;"><i class="fa-solid fa-square-check" style="color: var(--primary-color);"></i> 주요 식품기업 DX 성공 사례</h4>
+                            <ul class="custom-list" style="margin-top: 0; margin-bottom: 20px;">
+                                <li style="margin-bottom: 8px; font-size: 14px;"><strong>1) A사:</strong> 수기 온도 기록을 IoT 센서 자동화로 전환하여 해썹(HACCP) 데이터 이탈 방지 및 신뢰도 200% 상승.</li>
+                                <li style="margin-bottom: 8px; font-size: 14px;"><strong>2) B사:</strong> 입고부터 출고까지 QR코드 추적 시스템을 도입하여 클레임 발생 시 원인 추적 시간을 3일에서 5분으로 단축.</li>
+                            </ul>
+
+                            <div class="stat-grid">
+                                <div class="stat-card">
+                                    <div class="stat-num">-85%</div>
+                                    <div class="stat-label">부적합 문서 작성 소요시간 단축</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-num">98.5%</div>
+                                    <div class="stat-label">AI 비전 기반 불량 실시간 분류 정확도</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 우측 3대 핵심 가치 카드 (텍스트 보강) -->
+                        <div style="display: flex; flex-direction: column; gap: 15px; justify-content: center;">
+                            <div class="card" style="padding: 20px 25px;">
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <div class="card-icon" style="margin: 0; font-size: 24px;"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                                    <h4 class="card-title" style="margin: 0; font-size: 17px;">실시간 추적성 확보 (Traceability)</h4>
+                                </div>
+                                <p class="card-text" style="margin-top: 8px; font-size: 13.5px; line-height: 1.5;">
+                                    클레임 발생 시 즉각 원자재 입고부터 제조 공정 센서 데이터까지 5분 이내 역추적 완료하여 신속한 초동 조치를 가능케 합니다.
+                                </p>
+                            </div>
+                            <div class="card" style="padding: 20px 25px;">
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <div class="card-icon" style="margin: 0; font-size: 24px;"><i class="fa-solid fa-chart-line"></i></div>
+                                    <h4 class="card-title" style="margin: 0; font-size: 17px;">수기 휴먼에러 및 기록 누락 차단</h4>
+                                </div>
+                                <p class="card-text" style="margin-top: 8px; font-size: 13.5px; line-height: 1.5;">
+                                    현장의 자필 측정 일지 대신 모바일 및 자동 연동 센서 데이터를 통해 원천적으로 기록 오류와 조작 가능성을 사전 차단합니다.
+                                </p>
+                            </div>
+                            <div class="card" style="padding: 20px 25px;">
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <div class="card-icon" style="margin: 0; font-size: 24px;"><i class="fa-solid fa-handshake"></i></div>
+                                    <h4 class="card-title" style="margin: 0; font-size: 17px;">대기업-협력사 공동 신뢰 체계</h4>
+                                </div>
+                                <p class="card-text" style="margin-top: 8px; font-size: 13.5px; line-height: 1.5;">
+                                    대시보드를 매개로 품질 분석 결과와 지표를 실시간 투명하게 공유함으로써 불필요한 감정 소모를 없애고 파트너십을 견고히 합니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 2] 2장. AI 활용법 - 1: 실용적 AI 업무 활용 가이드 (템플릿 개편) -->
+            <div class="slide" data-chapter="2">
+                <div class="slide-header">
+                    <span class="slide-badge">Chapter 02 - Slide 1</span>
+                    <h2 class="slide-title">품질 실무 현장에서 <span>오늘 당장 실용적으로 쓰는 AI 활용 가이드</span></h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <!-- 좌측 카드 영역: 실용적 AI 활용 시나리오 3선 -->
+                        <div class="card">
+                            <div class="card-icon" style="margin-bottom: 10px;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                            <h3 class="card-title" style="font-size: 20px; margin-bottom: 15px;">실무 밀착형 AI 활용 시나리오 3선</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div>
+                                    <h4 style="font-size: 15px; font-weight: 800; color: var(--primary-dark);"><i class="fa-solid fa-file-pen" style="color: var(--primary-color); margin-right: 5px;"></i> 1) 부적합 보고서 초안 자동 작성</h4>
+                                    <p style="font-size: 13.5px; color: var(--text-dark); margin-left: 20px; line-height: 1.5;">
+                                        현장 상황("만두 피 터짐 발생, 라인3 가동 온도 180도, 현장 습도 높음")만 날것으로 툭 던져도 AI가 5-Why 인과 관계가 들어간 논리적인 품질 부적합 보고서(NCR) 형식으로 문장을 빌드합니다.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 style="font-size: 15px; font-weight: 800; color: var(--primary-dark);"><i class="fa-solid fa-language" style="color: var(--primary-color); margin-right: 5px;"></i> 2) 해외 식품 규제 및 설비 매뉴얼 번역/요약</h4>
+                                    <p style="font-size: 13.5px; color: var(--text-dark); margin-left: 20px; line-height: 1.5;">
+                                        복잡하고 어려운 영문 신규 포장기 설비 매뉴얼이나 해외 수출용 첨가물 규정 PDF 문서를 AI에 올린 뒤 "우리 현장에 영향이 있는 핵심 체크리스트 5개만 표로 뽑아줘"라고 지시하여 10분 만에 규제 검토를 끝냅니다.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 style="font-size: 15px; font-weight: 800; color: var(--primary-dark);"><i class="fa-solid fa-envelope-open-text" style="color: var(--primary-color); margin-right: 5px;"></i> 3) 감정 소모 없는 고난도 고객 클레임 대응문 작성</h4>
+                                    <p style="font-size: 13.5px; color: var(--text-dark); margin-left: 20px; line-height: 1.5;">
+                                        악성 불만성 요구 사항에 대해 감정을 빼고 식품위생법 규정 및 제조물배경책임에 근거하여 회사의 손해를 방지하면서도 고객을 납득시키는 정중하고 객관적인 이메일 답변 초안을 3초 만에 생성합니다.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 우측 카드 영역: 현업 즉시 복사용 템플릿 (구체적 템플릿 탑재) -->
+                        <div class="card">
+                            <div class="card-icon" style="margin-bottom: 10px;"><i class="fa-solid fa-copy"></i></div>
+                            <h3 class="card-title" style="font-size: 20px; margin-bottom: 10px;">현업 복사 전용 5-Why 분석 프롬프트</h3>
+                            <div class="prompt-template">
+                                <span class="prompt-tag"># 역할:</span> 식품 품질 경영 시스템(ISO 22000) 선임 심사위원<br>
+                                <span class="prompt-tag"># 상황:</span> 만두 제품 제조 공정 중 실링 열판 온도 센서 일시 오류로 인해 포장 접착 면 일부 밀봉 미흡 발생. 완제품에서 미세 이격 확인.<br>
+                                <span class="prompt-tag"># 지시:</span> <br>
+                                아래의 세부 현장 데이터를 바탕으로 5-Why 원인 규명 시나리오를 과학적으로 추적하고, 시정 조치 요구서에 바로 넣을 수 있게 [단기 조치 사항 / 장기 재발방지대책]을 구분하여 격식 있는 공문서 톤으로 최종 보고서를 도출해라.<br><br>
+                                * 기계 가동 속도: 65rpm / 열판 타겟온도: 190도 / 오류 발생 시점 감지 지연 시간: 12분 / 영향받은 ロット(Lot) 물량: 총 340박스 격리 완료.
+                            </div>
+                            <p class="card-text" style="margin-top: 10px; font-size: 13px; font-weight: bold; color: var(--primary-dark);">
+                                <i class="fa-solid fa-lightbulb" style="color: var(--secondary-color);"></i> 사용법: 위 초록색 상자 텍스트를 그대로 복사하여 ChatGPT나 Claude에 붙여넣고 [상황]과 [데이터]만 변경해 보세요.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 3] 2장. AI 활용법 - 2: NotebookLM을 활용한 품질 정보 분석 (다이어그램 추가 및 링크 삽입) -->
+            <div class="slide" data-chapter="2">
+                <div class="slide-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <span class="slide-badge">Chapter 02 - Slide 2</span>
+                        <h2 class="slide-title">구글 NotebookLM 활용: <span>우리 공장 문서로 품질 지식 허브 구축</span></h2>
+                    </div>
+                    <!-- 사용자의 실무 NotebookLM 링크 바로가기 프리미엄 버튼 추가 -->
+                    <a href="https://notebooklm.google.com/notebook/02a1ec5d-b552-4d12-b4e8-296a37918cc9" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%); color: #FFF; padding: 12px 24px; border-radius: 30px; font-weight: 800; font-size: 14px; box-shadow: 0 4px 15px rgba(0, 90, 43, 0.2); transition: var(--transition-smooth); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> 실습용 NotebookLM 열기
+                    </a>
+                </div>
+                <div class="slide-content">
+                    <div class="grid-3">
+                        <div class="card">
+                            <div class="card-icon"><i class="fa-solid fa-book-open"></i></div>
+                            <h3 class="card-title">1단계. 품질 문서 업로드</h3>
+                            <p class="card-text" style="font-size: 14.5px;">
+                                사내 <strong>HACCP 관리 기준서, 표준 작업 지침서(SOP), 원부재료 성적서(PDF/Word)</strong>뿐만 아니라, <strong>'과거 3개년 동안 쌓인 고객 클레임 이력 정리 엑셀'</strong>까지 NotebookLM 소스로 통째로 업로드합니다.
+                            </p>
+                            <div class="diagram-container">
+                                <div class="diagram-node">HACCP 매뉴얼</div>
+                                <span class="diagram-arrow">➔</span>
+                                <div class="diagram-node" style="background: var(--primary-color); color: #FFF;">NotebookLM</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon"><i class="fa-solid fa-comments"></i></div>
+                            <h3 class="card-title">2단계. 대화형 지식 검색</h3>
+                            <p class="card-text" style="font-size: 14.5px;">
+                                "센서 오작동 시 격리 범위는 어떻게 되지?"와 같은 매뉴얼 검색뿐만 아니라, <strong>"최근 3년간 가장 많이 발생한 만두 이물 클레임의 공통 발생 계절과 매뉴얼 상의 누락 원인을 연계 분석해줘"</strong> 같은 지능형 추적 질문도 완벽히 대답합니다.
+                            </p>
+                            <div class="diagram-container">
+                                <div class="diagram-node">클레임 질문</div>
+                                <span class="diagram-arrow">➔</span>
+                                <div class="diagram-node" style="background: var(--primary-dark); color: #FFF;">원인 규명 리포트</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon"><i class="fa-solid fa-podcast"></i></div>
+                            <h3 class="card-title">3단계. 교육 자동화 결과 도출</h3>
+                            <p class="card-text" style="font-size: 14.5px;">
+                                업로드된 품질 문서를 기반으로 <strong>현장 신입사원 OJT 교육용 대본, 현장 위생 수칙 FAQ 리스트, 작업 전 5분 안전 TBM 교육용 오디오 가이드 대본</strong>까지 '단 10초 만에' 정밀하게 추출하여 즉시 배포할 수 있습니다.
+                            </p>
+                            <div class="diagram-container">
+                                <div class="diagram-node">오디오 스크립트</div>
+                                <span class="diagram-arrow">➔</span>
+                                <div class="diagram-node">현장 배포 완료</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 4] 2장. AI 활용법 - 3: Antigravity 소개 및 품질 자동화 연동 (흐름도 추가) -->
+            <div class="slide" data-chapter="2">
+                <div class="slide-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <span class="slide-badge">Chapter 02 - Slide 3</span>
+                        <h2 class="slide-title">Antigravity(안티그래비티): <span>품질 시스템 자동화 브릿지</span></h2>
+                    </div>
+                    <!-- 브랜드 노출 현황 대시보드 바로가기 프리미엄 버튼 추가 -->
+                    <a href="https://lloovvee86-hue.github.io/food-safety-dashboard/" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%); color: #FFF; padding: 12px 24px; border-radius: 30px; font-weight: 800; font-size: 14px; box-shadow: 0 4px 15px rgba(0, 90, 43, 0.2); transition: var(--transition-smooth); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> 브랜드 노출 현황 대시보드 열기
+                    </a>
+                </div>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <!-- 좌측 카드 영역 -->
+                        <div class="card" style="justify-content: space-between;">
+                            <div>
+                                <div class="card-icon" style="margin-bottom: 10px;"><i class="fa-solid fa-microchip"></i></div>
+                                <h3 class="card-title" style="font-size: 20px;">Antigravity의 실무적 핵심 기능</h3>
+                                <ul class="custom-list" style="margin-top: 10px;">
+                                    <li><i class="fa-solid fa-circle-nodes"></i> <strong>품질 데이터 연동 파이프라인 빌더:</strong> 협력사 포털, LIMS(품질분석시스템), 공정 PLC 등 분산된 데이터를 AI가 자동으로 수집하고 가공하도록 지원합니다.</li>
+                                    <li><i class="fa-solid fa-shield-halved"></i> <strong>강력한 망분리 및 데이터 보안성:</strong> 사내 기밀 정보 및 공정 핵심 파라미터가 외부 상용 AI 서버로 유출되지 않도록 폐쇄형 보안 모듈로 동작합니다.</li>
+                                    <li><i class="fa-solid fa-robot"></i> <strong>백그라운드 스케줄러 기능 지원:</strong> 사용자가 개입하지 않아도 매시간, 매일 지정된 배치 작업(Batch Job)을 조용히 수행하여 결과물만 제공합니다.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="highlight-box" style="margin-top: 10px;">
+                                <p style="font-size: 13.5px; line-height: 1.5; color: var(--primary-dark);">
+                                    <strong><i class="fa-solid fa-circle-exclamation" style="color: var(--secondary-color);"></i> 모니터링 적용 효과:</strong> 통신 장애 등 설비 연결 오류 발생 즉시 담당자 카카오톡/SMS로 1분 이내 정밀 장애 원인 분석 문자가 발송되도록 하여 골든타임을 확보합니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 우측 카드 영역: 자동화 흐름 시각화 -->
+                        <div class="card">
+                            <div class="card-icon" style="margin-bottom: 5px;"><i class="fa-solid fa-network-wired"></i></div>
+                            <h3 class="card-title" style="font-size: 20px; margin-bottom: 5px;">납품 성적서 수집 및 취합 파이프라인 흐름도</h3>
+                            
+                            <div class="pipeline-container">
+                                <div class="pipeline-step">
+                                    <div class="pipeline-icon">1</div>
+                                    <div class="pipeline-info">
+                                        <div class="pipeline-title">포털 자동 로그인 및 탐색</div>
+                                        <div class="pipeline-desc">매일 아침 8시, Antigravity가 협력사 포털 시스템에 자동 인증 로그인</div>
+                                    </div>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="pipeline-icon">2</div>
+                                    <div class="pipeline-info">
+                                        <div class="pipeline-title">납품 성적서 다운로드</div>
+                                        <div class="pipeline-desc">전일 납품된 원부재료 성적서 PDF/Excel 파일을 자동으로 탐색 후 안전 수집</div>
+                                    </div>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="pipeline-icon">3</div>
+                                    <div class="pipeline-info">
+                                        <div class="pipeline-title">데이터 통합 및 취합</div>
+                                        <div class="pipeline-desc">파일 내 성분 데이터 수치(수분, 두께 등)를 엑셀 데이터 DB에 정밀 가공 후 병합</div>
+                                    </div>
+                                </div>
+                                <div class="pipeline-step" style="border-left-color: var(--secondary-color);">
+                                    <div class="pipeline-icon" style="background: var(--secondary-color);">4</div>
+                                    <div class="pipeline-info">
+                                        <div class="pipeline-title">카카오톡/알림 발송 및 경고</div>
+                                        <div class="pipeline-desc">통합 요약 리포트를 담당자 카톡으로 보고하며 이탈 수치 감지 시 즉각 경고 알림</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 5] 3장. Power BI 소개 및 왜 도입해야 하는가? (흐름 그래픽 추가) -->
+            <div class="slide" data-chapter="3">
+                <div class="slide-header">
+                    <span class="slide-badge">Chapter 03 - Slide 1</span>
+                    <h2 class="slide-title">Power BI 개요: <span>반복적인 품질 보고 업무의 종말 선언</span></h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <!-- 좌측 설명 영역 -->
+                        <div class="card" style="justify-content: space-between;">
+                            <div>
+                                <div class="card-icon" style="margin-bottom: 10px;"><i class="fa-solid fa-chart-pie"></i></div>
+                                <h3 class="card-title" style="font-size: 20px;">왜 엑셀 차트 대신 Power BI 보고서인가?</h3>
+                                <ul class="custom-list">
+                                    <li><i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>반복 수기 작업의 완전 자동화:</strong> 매달 엑셀 원장에서 그래프 복사하여 파워포인트 슬라이드 붙여넣고 수치 수정하던 단순 보고 노동 시간을 제로(0)화합니다.</li>
+                                    <li><i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>입체적 인터랙션 필터 제공:</strong> 고정된 이미지 캡처 보고서와 달리 특정 협력사, 날짜, 불량 분류명을 마우스로 클릭하면 화면 내 모든 관련 차트가 실시간 동적 연동 필터링됩니다.</li>
+                                    <li><i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>초대용량 데이터 수용 한계 극복:</strong> 일반 엑셀의 104만 행 한계를 넘어 공장 PLC 센서에서 쏟아지는 수천만 행의 로우 데이터를 부드럽게 고속 렌더링합니다.</li>
+                                </ul>
+                            </div>
+
+                            <div class="highlight-box" style="margin-top: 10px;">
+                                <p style="font-size: 13.5px; line-height: 1.5; color: var(--primary-dark); font-weight: bold;">
+                                    "데이터 정제부터 최종 모니터링 대시보드 구축까지, 단 하나의 도구로 통합 해결합니다."
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 우측 영역: Power BI 구성 요소 및 데이터 흐름 시각화 -->
+                        <div class="card" style="justify-content: space-between;">
+                            <div>
+                                <div class="card-icon" style="margin-bottom: 10px;"><i class="fa-solid fa-cubes"></i></div>
+                                <h3 class="card-title" style="font-size: 20px;">Power BI의 3대 구성 프로세스</h3>
+                                <ul class="custom-list">
+                                    <li><strong>1. Power Query (데이터 추출/정제):</strong> 흩어진 엑셀, DB 원장을 로드하여 타입 변경, 빈칸 삭제 등 가공을 수행하는 심장부입니다.</li>
+                                    <li><strong>2. 데이터 모델링 (데이터 관계 형성):</strong> 입고 검사 데이터와 제조 이력 데이터를 '바코드 번호'를 키값으로 묶어 통합 분석의 판을 짭니다.</li>
+                                    <li><strong>3. 시각화 (인터랙티브 대시보드):</strong> 정제된 결과 지표를 다이나믹 카드, 파레토 차트, 꺾은선 추이 그래프 등으로 조합하여 스크린에 표출합니다.</li>
+                                </ul>
+                            </div>
+
+                            <!-- 데이터 흐름 시각화 그래픽 -->
+                            <div class="bi-flow-container">
+                                <div class="bi-flow-node">
+                                    <i class="fa-solid fa-file-excel"></i>
+                                    <h4>Raw 엑셀/DB</h4>
+                                </div>
+                                <div class="diagram-arrow">➔</div>
+                                <div class="bi-flow-node" style="background: rgba(98, 179, 37, 0.15); border-color: var(--primary-color);">
+                                    <i class="fa-solid fa-filter"></i>
+                                    <h4>Power Query</h4>
+                                </div>
+                                <div class="diagram-arrow">➔</div>
+                                <div class="bi-flow-node" style="background: rgba(0, 90, 43, 0.15); border-color: var(--primary-dark);">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <h4>품질 대시보드</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 6] 3장. Power BI 사용법 - 1: 데이터 정비 및 가공 (실제 테이블 대조 시각화) -->
+            <div class="slide" data-chapter="3">
+                <div class="slide-header">
+                    <span class="slide-badge">Chapter 03 - Slide 2</span>
+                    <h2 class="slide-title">1단계: Power BI가 사랑하는 <span>"올바른 엑셀 데이터 양식" 구축</span></h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid-2">
+                        <!-- Bad Case 테이블 시각화 -->
+                        <div class="card">
+                            <div class="card-icon" style="color: #E53E3E; margin-bottom: 10px;"><i class="fa-regular fa-circle-xmark"></i></div>
+                            <h3 class="card-title" style="font-size: 19px; color: #C53030;">Bad Case: 잘못된 데이터 형태 (병합/빈칸/가로배열)</h3>
+                            
+                            <!-- 가상 엑셀 렌더링 -->
+                            <table class="excel-table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="4" class="excel-bad-merged">★ 2026년 6월 생산 품질 검사 원장 (A1~D1 병합)</th>
+                                    </tr>
+                                    <tr>
+                                        <th>순번</th>
+                                        <th>라인명</th>
+                                        <th>6월 1일</th>
+                                        <th>6월 2일</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>만두A</td>
+                                        <td>0.02% (NG)</td>
+                                        <td>0.01% (OK)</td>
+                                    </tr>
+                                    <tr class="excel-bad-empty">
+                                        <td colspan="4" style="color: #A0AEC0; font-style: italic;">[가독성 향상을 위한 공백 행 삽입]</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>만두B</td>
+                                        <td>0.04% (NG)</td>
+                                        <td>0.02% (OK)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <ul class="custom-list" style="margin-top: 15px; font-size: 13.5px;">
+                                <li><i class="fa-solid fa-triangle-exclamation" style="color: #E53E3E;"></i> 제목 표시 목적의 <strong>A1~D1 병합셀</strong>은 데이터 로드 오류를 냅니다.</li>
+                                <li><i class="fa-solid fa-triangle-exclamation" style="color: #E53E3E;"></i> 중간에 공백인 <strong>빈 행(Empty Row)</strong>이 있으면 전송이 중단될 수 있습니다.</li>
+                                <li><i class="fa-solid fa-triangle-exclamation" style="color: #E53E3E;"></i> 날짜가 가로로 증가하면 열 개수가 계속 늘어나 분석 차트 적용이 어렵습니다.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Good Case 테이블 시각화 -->
+                        <div class="card" style="border-color: rgba(98, 179, 37, 0.5);">
+                            <div class="card-icon" style="margin-bottom: 10px;"><i class="fa-regular fa-circle-check"></i></div>
+                            <h3 class="card-title" style="font-size: 19px;">Good Case: 표준 DB 구조 (세로 누적형 Tidy Data)</h3>
+
+                            <!-- 가상 엑셀 렌더링 -->
+                            <table class="excel-table">
+                                <thead>
+                                    <tr>
+                                        <th class="excel-good-header">검사일자</th>
+                                        <th class="excel-good-header">라인명</th>
+                                        <th class="excel-good-header">불량률</th>
+                                        <th class="excel-good-header">최종판정</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2026-06-01</td>
+                                        <td>만두A</td>
+                                        <td>0.0002</td>
+                                        <td>NG</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-06-01</td>
+                                        <td>만두B</td>
+                                        <td>0.0004</td>
+                                        <td>NG</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-06-02</td>
+                                        <td>만두A</td>
+                                        <td>0.0001</td>
+                                        <td>OK</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-06-02</td>
+                                        <td>만두B</td>
+                                        <td>0.0002</td>
+                                        <td>OK</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <ul class="custom-list" style="margin-top: 15px; font-size: 13.5px;">
+                                <li><i class="fa-solid fa-circle-check"></i> 첫째 행은 <strong>헤더(Header)</strong> 정보만 명확하고 유일하게 정의됩니다.</li>
+                                <li><i class="fa-solid fa-circle-check"></i> 공백 셀이나 가독성용 여백 없이 <strong>1 Row = 1 데이터 레코드</strong>를 이룹니다.</li>
+                                <li><i class="fa-solid fa-circle-check"></i> 날짜와 데이터가 행(가로)이 아닌 <strong>열(세로) 방향으로 길게 누적</strong>되는 구조입니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 7] 3장. Power BI 사용법 - 2: 협력기업 VOC 대시보드 구축 사례 및 기능 가이드 -->
+            <div class="slide" data-chapter="3">
+                <div class="slide-header">
+                    <span class="slide-badge">Chapter 03 - Slide 3</span>
+                    <h2 class="slide-title">2단계: 협력기업 VOC 대시보드 구축 <span>사례 및 핵심 연동 기능 가이드</span></h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid-3">
+                        <!-- 1. 협력사별 VOC 종량 분석 카드 -->
+                        <div class="card" style="justify-content: space-between;">
+                            <div>
+                                <div class="card-icon" style="margin-bottom: 5px;"><i class="fa-solid fa-chart-bar"></i></div>
+                                <h3 class="card-title" style="font-size: 18px; margin-bottom: 8px;">1. 협력사별 VOC 종량 분석</h3>
+                                <p class="card-text" style="font-size: 13.5px; line-height: 1.6; margin-bottom: 10px;">
+                                    각 협력기업(지엠에프 151건, 우리델리카 93건, 세진식품 56건 등)에 등록된 실제 VOC 데이터 물량을 Power BI 누적 막대 형태로 실시간 집계하여 **협력사별 품질 취약점**을 비교 분석합니다.
+                                </p>
+                                <p class="card-text" style="font-size: 12.5px; line-height: 1.5; color: var(--text-muted);">
+                                    기존의 분기별 서면 보고와 달리 매시간 갱신되는 원본 검사 기록을 연동하여 품질 이슈 발생 즉시 파트너사와 실시간 시그널 공유가 가능해집니다.
+                                </p>
+                            </div>
+                            
+                            <!-- 미니 파레토 Mockup (VOC 실데이터 반영) -->
+                            <div class="mock-dashboard">
+                                <div class="mock-header"><span>외주 협력사별 Q1 VOC 현황</span><span>종량 분석</span></div>
+                                <div class="mock-body" style="grid-template-columns: 1fr;">
+                                    <div class="mock-chart-bar">
+                                        <div class="mock-bar-row">
+                                            <div class="mock-bar-label">지엠에프</div>
+                                            <div class="mock-bar-track"><div class="mock-bar-fill" style="width: 78%; background: var(--primary-dark);"></div></div>
+                                            <span style="font-size: 9px; font-weight: bold; color: var(--primary-dark);">151건</span>
+                                        </div>
+                                        <div class="mock-bar-row">
+                                            <div class="mock-bar-label">우리델리카</div>
+                                            <div class="mock-bar-track"><div class="mock-bar-fill" style="width: 48%; background: var(--primary-color);"></div></div>
+                                            <span style="font-size: 9px; font-weight: bold; color: var(--primary-color);">93건</span>
+                                        </div>
+                                        <div class="mock-bar-row">
+                                            <div class="mock-bar-label">세진식품</div>
+                                            <div class="mock-bar-track"><div class="mock-bar-fill" style="width: 29%; background: #CBD5E0;"></div></div>
+                                            <span style="font-size: 9px; color: var(--text-muted);">56건</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. 유형별 집중 추적 필터링 카드 -->
+                        <div class="card" style="justify-content: space-between;">
+                            <div>
+                                <div class="card-icon" style="margin-bottom: 5px;"><i class="fa-solid fa-filter"></i></div>
+                                <h3 class="card-title" style="font-size: 18px; margin-bottom: 8px;">2. 불량 유형별 집중 필터링</h3>
+                                <p class="card-text" style="font-size: 13.5px; line-height: 1.6; margin-bottom: 10px;">
+                                    대시보드 상의 특정 필터(예: **비금속이물 37%, 상태불량 29%**)를 클릭하는 순간, 관련된 원인 공정 라인과 위반 카테고리가 연계 매핑되어 화면 전체가 실시간 반응형으로 필터링 분석됩니다.
+                                </p>
+                                <p class="card-text" style="font-size: 12.5px; line-height: 1.5; color: var(--text-muted);">
+                                    품질 미팅 중 특정 이물 결함의 근원지를 즉시 추적할 수 있어 원인 분석 및 대책 회의 시 시간을 크게 축소시켜 줍니다.
+                                </p>
+                            </div>
+                            
+                            <!-- 미니 슬라이서 Mockup (VOC 대시보드 유형 매핑) -->
+                            <div class="mock-dashboard">
+                                <div class="mock-header"><span>동적 이물 및 불량 분석 필터</span></div>
+                                <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px;">
+                                    <span style="font-size: 9px; background: var(--primary-dark); color: #FFF; padding: 3px 6px; border-radius: 4px; font-weight: bold;">[선택] 비금속이물 (37%)</span>
+                                    <span style="font-size: 9px; background: #EDF2F7; padding: 3px 6px; border-radius: 4px;">상태불량 (29%)</span>
+                                    <span style="font-size: 9px; background: #EDF2F7; padding: 3px 6px; border-radius: 4px;">수량부족</span>
+                                </div>
+                                <div style="height: 1px; background: #E2E8F0; margin: 8px 0;"></div>
+                                <div style="font-size: 10px; color: var(--primary-dark); font-weight: bold;"><i class="fa-solid fa-filter"></i> 필터: 비금속이물 기준 협력망 데이터 격리 분석 중</div>
+                            </div>
+                        </div>
+
+                        <!-- 3. UCL 관리선 기준 스마트 알림 카드 -->
+                        <div class="card" style="justify-content: space-between;">
+                            <div>
+                                <div class="card-icon" style="margin-bottom: 5px;"><i class="fa-solid fa-bell"></i></div>
+                                <h3 class="card-title" style="font-size: 18px; margin-bottom: 8px;">3. UCL 한계선 기준 경보 자동화</h3>
+                                <p class="card-text" style="font-size: 13.5px; line-height: 1.6; margin-bottom: 10px;">
+                                    협력기업이 사전에 정의한 **관리 상한 임계값(UCL)**을 초과하는 불량이 탐지될 경우, 시각적으로 차트의 배경 컬러를 자동으로 붉게 전환하여 현업 담당자의 가시적 인지를 돕습니다.
+                                </p>
+                                <p class="card-text" style="font-size: 12.5px; line-height: 1.5; color: var(--text-muted);">
+                                    데이터 정렬과 시각 관제가 실시간으로 결합되어, 공정 상의 대형 사고로 이어지기 전 미리 예측 예방할 수 있는 선제적 안심 시스템을 완성합니다.
+                                </p>
+                            </div>
+                            
+                            <!-- 미니 KPI 카드 Mockup (UCL 알림 상태) -->
+                            <div class="mock-dashboard">
+                                <div class="mock-header"><span>협력사 모니터링 경보 센터</span></div>
+                                <div class="mock-kpi-cards">
+                                    <div class="mock-kpi-card" style="background: #FFF5F5; border-color: #FEB2B2;">
+                                        <div class="mock-kpi-val" style="font-size: 13px; font-weight: 800; color: #C53030;">경고: 우리델리카 상태불량 UCL 초과</div>
+                                        <div class="mock-kpi-lbl" style="color: #E53E3E; font-weight: bold; margin-top: 3px; font-size: 9px;"><i class="fa-solid fa-triangle-exclamation"></i> 상태불량 37% 전년비 29% 급증 감지</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [슬라이드 8] OUTRO / Q&A -->
+            <div class="slide" data-chapter="99">
+                <div class="cover-slide">
+                    <div class="cover-subtitle" style="color: var(--primary-color); font-weight: bold;">PULMUONE QUALITY DX SEMINAR</div>
+                    <h1 class="cover-title" style="font-size: 52px; margin-bottom: 30px;">데이터를 품은 품질 관리,<br>협력사와 풀무원이 함께 도약합니다.</h1>
+                    <p style="font-size: 20px; color: var(--text-muted); max-width: 800px; margin: 0 auto 50px; line-height: 1.7;">
+                        오늘 학습하신 생성형 AI 프롬프트 가이드와 Power BI 표준 데이터 구성법을 토대로 실제 품질 실무 현장에서 작지만 강한 혁신을 만들어 주시기 바랍니다.
+                    </p>
+                    <div style="background: rgba(0, 90, 43, 0.05); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 40px; display: inline-flex; gap: 30px; color: var(--text-dark);">
+                        <span><i class="fa-solid fa-circle-question" style="color: var(--primary-color);"></i> 관련 자료 & 템플릿 문의</span>
+                        <span>|</span>
+                        <span>이메일: <strong style="color: var(--primary-dark);">shkimbf@pulmuone.com</strong></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 하단 컨트롤 영역 -->
+        <footer>
+            <div class="keyboard-hint">
+                <i class="fa-solid fa-keyboard"></i> 키보드 <kbd>◀</kbd> <kbd>▶</kbd> 방향키로 슬라이드를 이동할 수 있습니다.
+            </div>
+            
+            <div class="footer-controls">
+                <button class="btn-control" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="slide-counter"><span id="current-slide-num">1</span> / <span id="total-slide-num">9</span></div>
+                <button class="btn-control" onclick="nextSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            
+            <div style="font-size: 14px; color: var(--text-muted);">
+                © 2026 Pulmuone Quality Assurance.
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 슬라이드 관리 스크립트
+        const slides = document.querySelectorAll('.slide');
+        const totalSlideNumSpan = document.getElementById('total-slide-num');
+        const currentSlideNumSpan = document.getElementById('current-slide-num');
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        let currentIdx = 0;
+        totalSlideNumSpan.textContent = slides.length;
+
+        function updateSlidePosition() {
+            slides.forEach((slide, idx) => {
+                slide.classList.remove('active', 'prev-slide');
+                if (idx === currentIdx) {
+                    slide.classList.add('active');
+                } else if (idx < currentIdx) {
+                    slide.classList.add('prev-slide');
+                }
+            });
+
+            // 페이지 번호 갱신
+            currentSlideNumSpan.textContent = currentIdx + 1;
+
+            // 상단 대분류 네비게이션 액티브 상태 조절
+            const currentChapter = parseInt(slides[currentIdx].getAttribute('data-chapter'));
+            navItems.forEach((item, idx) => {
+                item.classList.remove('active');
+            });
+
+            if (currentChapter === 0) {
+                navItems[0].classList.add('active'); // Cover
+            } else if (currentChapter === 1) {
+                navItems[1].classList.add('active'); // 1장
+            } else if (currentChapter === 2) {
+                navItems[2].classList.add('active'); // 2장
+            } else if (currentChapter === 3) {
+                navItems[3].classList.add('active'); // 3장
+            }
+        }
+
+        function nextSlide() {
+            if (currentIdx < slides.length - 1) {
+                currentIdx++;
+                updateSlidePosition();
+            }
+        }
+
+        function prevSlide() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                updateSlidePosition();
+            }
+        }
+
+        // 장으로 가기 (챕터의 첫 슬라이드 매칭)
+        function goToChapter(chapterNum) {
+            for (let i = 0; i < slides.length; i++) {
+                const sChapter = parseInt(slides[i].getAttribute('data-chapter'));
+                if (sChapter === chapterNum) {
+                    currentIdx = i;
+                    updateSlidePosition();
+                    break;
+                }
+            }
+        }
+
+        // 키보드 네비게이션 연동
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // 1080p 고정비율 스케일링 조절
+        function adjustRatio() {
+            const container = document.getElementById('presentation-container');
+            const targetWidth = 1920;
+            const targetHeight = 1080;
+            
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            const scaleX = windowWidth / targetWidth;
+            const scaleY = windowHeight / targetHeight;
+            
+            // 비율을 훼손하지 않으면서 화면에 꽉 맞추기 위해 min값 기준 스케일 적용
+            const scale = Math.min(scaleX, scaleY);
+            
+            container.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('resize', adjustRatio);
+        window.addEventListener('DOMContentLoaded', () => {
+            adjustRatio();
+            updateSlidePosition();
+        });
+    </script>
+</body>
+</html>
