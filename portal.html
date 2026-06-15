@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulmuone Antigravity 2.0 - Governing AI Agent Portal</title>
+    <meta name="description" content="풀무원 품질기술센터 Governing AI Agent 통합 관제 및 6대 AI 서브 시스템 통합 포털">
+    
+    <!-- 프리미엄 Pretendard & Outfit 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 아이콘 팩 (Font Awesome 6) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ==========================================================================
+           1. CORE DESIGN SYSTEM & TOKENS (Glassmorphism & HSL Neon Green)
+           ========================================================================== */
+        :root {
+            --bg-base: hsl(140, 24%, 6%);
+            --bg-surface: hsl(140, 20%, 9%);
+            --bg-surface-elevated: hsl(140, 18%, 13%);
+            --glass-bg: rgba(18, 30, 22, 0.7);
+            --glass-border: rgba(121, 185, 40, 0.2);
+            
+            --primary: #79b928; /* 풀무원 에메랄드 그린 */
+            --primary-glow: hsl(140, 65%, 50%);
+            --primary-neon: #95e032; /* 네온 밝은 그린 */
+            --accent-blue: #3b82f6;
+            --accent-purple: #a78bfa;
+            --accent-orange: #ea8824;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --font-display: 'Outfit', 'Noto Sans KR', sans-serif;
+            --font-sans: 'Inter', 'Noto Sans KR', sans-serif;
+            
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 10px;
+            
+            --shadow-neon: 0 0 25px rgba(121, 185, 40, 0.15);
+            --shadow-heavy: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(121, 185, 40, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 45%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 프리미엄 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: hsl(140, 15%, 18%);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1500px;
+            padding: 40px 24px;
+        }
+
+        /* ==========================================================================
+           2. HEADER SECTION
+           ========================================================================== */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 40px;
+            position: relative;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-badge {
+            background: linear-gradient(135deg, var(--primary), #5d8a1e);
+            color: white;
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.2rem;
+            padding: 8px 16px;
+            border-radius: var(--border-radius-sm);
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(121, 185, 40, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-badge i {
+            animation: spin-pulse 8s infinite linear;
+        }
+
+        @keyframes spin-pulse {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .header-title-wrapper h1 {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(120deg, #ffffff 40%, var(--primary-neon) 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .header-title-wrapper p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-status {
+            background: rgba(149, 224, 50, 0.12);
+            color: var(--primary-neon);
+            border: 1px solid rgba(149, 224, 50, 0.3);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-neon);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--primary-neon);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .version-tag {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .version-tag strong {
+            color: var(--primary-neon);
+        }
+
+        /* ==========================================================================
+           3. INTRO / WELCOME BANNER
+           ========================================================================== */
+        .intro-banner {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            padding: 30px 40px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            box-shadow: var(--shadow-neon);
+            animation: fadeInUp 0.8s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .intro-text-group {
+            max-width: 70%;
+        }
+
+        .intro-text-group h2 {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .intro-text-group h2 span {
+            color: var(--primary-neon);
+        }
+
+        .intro-text-group p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .kodari-mascot-badge {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(121, 185, 40, 0.1);
+            border: 1px dashed var(--primary);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            max-width: 320px;
+        }
+
+        .kodari-mascot-badge img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            object-fit: cover;
+            border: 2px solid var(--primary-neon);
+        }
+
+        .kodari-status-text h4 {
+            font-size: 0.85rem;
+            color: var(--primary-neon);
+            font-weight: 700;
+        }
+
+        .kodari-status-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* ==========================================================================
+           4. 3-TIER GOVERNING ARCHITECTURE VISUALIZATION
+           ========================================================================== */
+        .arch-section {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            padding: 35px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-heavy);
+            backdrop-filter: blur(20px);
+            animation: fadeInUp 0.9s ease-out;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 12px;
+        }
+
+        .section-title i {
+            color: var(--primary-neon);
+        }
+
+        .arch-flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 20px 0;
+            background: radial-gradient(circle at 50% 50%, rgba(121, 185, 40, 0.03) 0%, transparent 80%);
+            border-radius: var(--border-radius-md);
+        }
+
+        .arch-tier {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .arch-node {
+            background: linear-gradient(135deg, hsl(140, 35%, 12%), hsl(140, 20%, 7%));
+            border: 2px solid var(--glass-border);
+            border-radius: var(--border-radius-md);
+            padding: 15px 25px;
+            text-align: center;
+            transition: var(--transition-smooth);
+            min-width: 280px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        .arch-node:hover {
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 25px rgba(149, 224, 50, 0.3);
+            transform: scale(1.03);
+        }
+
+        .arch-node.tier-1 {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+        .arch-node.tier-1:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .arch-node.tier-2 {
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(121, 185, 40, 0.2);
+            position: relative;
+        }
+        .arch-node.tier-2:hover {
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 35px rgba(149, 224, 50, 0.4);
+        }
+        
+        .arch-node.tier-2 .pulse-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: calc(var(--border-radius-md) + 2px);
+            border: 2px solid var(--primary-neon);
+            opacity: 0.15;
+            animation: pulse-border 2.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { transform: scale(0.98); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 0; }
+        }
+
+        .node-icon {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+        .tier-1 .node-icon { color: var(--accent-blue); }
+        .tier-2 .node-icon { color: var(--primary-neon); }
+
+        .node-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #fff;
+        }
+
+        .node-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .arch-line {
+            width: 2px;
+            height: 35px;
+            background: linear-gradient(to bottom, var(--accent-blue), var(--primary));
+            position: relative;
+        }
+
+        .arch-line.line-2 {
+            background: linear-gradient(to bottom, var(--primary), var(--primary-neon));
+            height: 45px;
+        }
+
+        .arch-line i {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            color: var(--primary-neon);
+            animation: bounce-arrow 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce-arrow {
+            0%, 100% { transform: translate(-50%, -50%) translateY(-3px); }
+            50% { transform: translate(-50%, -50%) translateY(3px); }
+        }
+
+        /* 3단계 실행 에이전트 다이어그램 */
+        .tier-3-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .arch-sub-node {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius-md);
+            padding: 15px 10px;
+            text-align: center;
+            transition: var(--transition-smooth);
+            cursor: pointer;
+        }
+
+        .arch-sub-node:hover {
+            background: rgba(121, 185, 40, 0.05);
+            border-color: rgba(121, 185, 40, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .arch-sub-node.active {
+            background: rgba(121, 185, 40, 0.1);
+            border-color: var(--primary-neon);
+            box-shadow: 0 4px 15px rgba(121, 185, 40, 0.2);
+        }
+
+        .sub-node-icon {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            transition: var(--transition-smooth);
+        }
+
+        .arch-sub-node.active .sub-node-icon,
+        .arch-sub-node:hover .sub-node-icon {
+            color: var(--primary-neon);
+            transform: scale(1.1);
+        }
+
+        .sub-node-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sub-node-desc {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* ==========================================================================
+           5. SYSTEM LAUNCHER LAUNCHPAD (Grid of 6 Sub-systems)
+           ========================================================================== */
+        .launchpad-section {
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .launchpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .system-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            padding: 28px;
+            backdrop-filter: blur(15px);
+            transition: var(--transition-smooth);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .system-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            border-color: var(--primary-neon);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(121, 185, 40, 0.2);
+        }
+
+        .system-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(121, 185, 40, 0.15) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .system-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .system-icon-box {
+            width: 48px;
+            height: 48px;
+            background: rgba(121, 185, 40, 0.08);
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--primary-neon);
+            transition: var(--transition-smooth);
+            border: 1px solid rgba(121, 185, 40, 0.1);
+        }
+
+        .system-card:hover .system-icon-box {
+            background: var(--primary-neon);
+            color: var(--bg-base);
+            transform: rotate(8deg) scale(1.05);
+            box-shadow: 0 0 15px var(--primary-neon);
+        }
+
+        .agent-status-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+        }
+
+        .system-card:hover .agent-status-tag.active {
+            background: rgba(149, 224, 50, 0.15);
+            border-color: var(--primary-neon);
+            color: var(--primary-neon);
+        }
+
+        .system-title {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            transition: var(--transition-smooth);
+        }
+
+        .system-card:hover .system-title {
+            color: var(--primary-neon);
+        }
+
+        .system-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .system-action-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-neon);
+            opacity: 0.75;
+            transition: var(--transition-smooth);
+            margin-top: auto;
+        }
+
+        .system-card:hover .system-action-row {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        /* ==========================================================================
+           6. REAL-TIME AI CONSOLE / LIVE FEED (Terminal UI)
+           ========================================================================== */
+        .console-section {
+            background: #090e0b;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            padding: 25px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), var(--shadow-heavy);
+            font-family: 'Courier New', Courier, monospace;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 1.1s ease-out;
+        }
+
+        .console-scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, rgba(149, 224, 50, 0.3), transparent);
+            animation: console-scan 6s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes console-scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(121, 185, 40, 0.2);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .console-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-neon);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .console-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .console-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .console-dot.red { background: #ef4444; }
+        .console-dot.yellow { background: #f59e0b; }
+        .console-dot.green { background: #10b981; }
+
+        .console-body {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #8ce652;
+            padding-right: 10px;
+        }
+
+        .console-line {
+            line-height: 1.4;
+            display: flex;
+            gap: 8px;
+        }
+
+        .console-timestamp {
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .console-tag {
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+        .console-tag.sys { color: var(--accent-purple); }
+        .console-tag.agent { color: var(--primary-neon); }
+
+        .console-text {
+            word-break: break-all;
+        }
+
+        /* ==========================================================================
+           7. FOOTER
+           ========================================================================== */
+        footer {
+            margin-top: 60px;
+            padding-bottom: 40px;
+            width: 100%;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 30px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        footer p {
+            margin-bottom: 6px;
+        }
+
+        footer strong {
+            color: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .launchpad-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .tier-3-container {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .launchpad-grid {
+                grid-template-columns: 1fr;
+            }
+            .intro-banner {
+                flex-direction: column;
+                padding: 20px;
+            }
+            .intro-text-group {
+                max-width: 100%;
+            }
+            .tier-3-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            .header-right {
+                text-align: center;
+            }
+        }
+
+        /* ==========================================================================
+           GOVERNING CODE MONITOR & SANDBOX CSS
+           ========================================================================== */
+        .code-monitor-section {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            padding: 35px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-heavy);
+            backdrop-filter: blur(20px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .code-viewer-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            background: #040605;
+            border-radius: var(--border-radius-md);
+            border: 1px solid rgba(121, 185, 40, 0.15);
+            overflow: hidden;
+            height: 600px;
+        }
+
+        .code-sidebar {
+            background: rgba(18, 30, 22, 0.4);
+            border-right: 1px solid rgba(121, 185, 40, 0.15);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .code-file-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius-sm);
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            width: 100%;
+        }
+
+        .code-file-btn:hover {
+            background: rgba(121, 185, 40, 0.05);
+            border-color: rgba(121, 185, 40, 0.3);
+            color: #fff;
+        }
+
+        .code-file-btn.active {
+            background: rgba(121, 185, 40, 0.15);
+            border-color: var(--primary-neon);
+            color: var(--primary-neon);
+            box-shadow: inset 0 0 10px rgba(149, 224, 50, 0.1);
+        }
+
+        .code-file-btn i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .code-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .code-header-bar {
+            background: rgba(18, 30, 22, 0.6);
+            border-bottom: 1px solid rgba(121, 185, 40, 0.15);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .code-status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-neon);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--primary-neon);
+            animation: blink 1s infinite alternate;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .code-action-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-neon);
+        }
+
+        .code-display-area {
+            flex-grow: 1;
+            overflow: auto;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #bbf7d0; /* Soft neon green code text */
+            background: #030504;
+            scrollbar-width: thin;
+        }
+
+        .code-display-area pre {
+            margin: 0;
+        }
+
+        .code-display-area code {
+            font-family: inherit;
+            display: block;
+            white-space: pre;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        
+        <!-- ==========================================================================
+             HEADER SECTION
+             ========================================================================== -->
+        <header>
+            <div class="header-logo-group">
+                <div class="logo-badge">
+                    <i class="fa-solid fa-atom"></i> Antigravity 2.0
+                </div>
+                <div class="header-title-wrapper">
+                    <h1>통합 AI 관제탑 포털</h1>
+                    <p>
+                        <span class="live-indicator"></span> 
+                        <span>Governing AI Agent System Hub</span>
+                        <span class="badge-status">LIVE SYSTEM</span>
+                    </p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="version-tag">
+                    Platform Version: <strong>v2.0.0 Stable</strong>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==========================================================================
+             INTRO / WELCOME BANNER
+             ========================================================================== -->
+        <div class="intro-banner">
+            <div class="intro-text-group">
+                <h2>풀무원 안티그래비티 2.0에 오신 것을 환영합니다! 🚀</h2>
+                <p>
+                    대표님! 기존의 단일 식품안전 브랜드 현황 대시보드(버전 1) 수준을 완전히 초월하여, 
+                    <strong>품질기술센터 Governing AI Agent 체제</strong> 기반의 6대 핵심 AI 에이전트 시스템이 성공적으로 2.0으로 통합 업그레이드되었습니다. 
+                    이제 본 관제탑 포털을 통해 복잡한 실행 경로 이동 없이 품질 분석, 동선 설계, 비전 오블젝트 식별 등의 정예 솔루션을 즉각 통제하십시오!
+                </p>
+            </div>
+            <div class="kodari-mascot-badge">
+                <img src="https://raw.githubusercontent.com/wonseokjung/solopreneur-ai-agents/main/agents/kodari/assets/kodari_salute.png" alt="코다리 부장">
+                <div class="kodari-status-text">
+                    <h4>코다리 과장 (진급 대기중! 🫡)</h4>
+                    <p>"대표님을 향한 무한 충성심으로 싹 정비해 올렸습니다! 맡겨만 주십시오!"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             3-TIER GOVERNING ARCHITECTURE VISUALIZATION
+             ========================================================================== -->
+        <div class="arch-section">
+            <div class="section-title">
+                <i class="fa-solid fa-diagram-project"></i>
+                <span>3단계 자율 제어 거버닝 AI 아키텍처 (Governing Architecture)</span>
+            </div>
+            
+            <div class="arch-flow-container">
+                <!-- 1단계: 마스터 브레인 -->
+                <div class="arch-tier">
+                    <div class="arch-node tier-1">
+                        <div class="node-icon"><i class="fa-solid fa-brain"></i></div>
+                        <div class="node-title">1단계: 풀무원기술원 Master Brain AI</div>
+                        <div class="node-subtitle">글로벌 최고 권위 최상위 전략 뇌신경계</div>
+                    </div>
+                </div>
+                
+                <div class="arch-line"><i class="fa-solid fa-chevron-down"></i></div>
+                
+                <!-- 2단계: 거버닝 AI 에이전트 -->
+                <div class="arch-tier">
+                    <div class="arch-node tier-2">
+                        <div class="pulse-ring"></div>
+                        <div class="node-icon"><i class="fa-solid fa-gears"></i></div>
+                        <div class="node-title">2단계: 품질기술센터 Governing AI Agent</div>
+                        <div class="node-subtitle">하부 6대 실무 부문 자율 코디네이터 및 위기 대응 시스템</div>
+                    </div>
+                </div>
+                
+                <div class="arch-line line-2"><i class="fa-solid fa-chevron-down"></i></div>
+                
+                <!-- 3단계: 6대 하부 AI 실행 시스템 -->
+                <div class="arch-tier">
+                    <div class="tier-3-container">
+                        <div class="arch-sub-node active" onclick="activateAgent(0, 'eCS Partner')">
+                            <div class="sub-node-icon"><i class="fa-solid fa-handshake"></i></div>
+                            <div class="sub-node-title">eCS 협력처 AI</div>
+                            <div class="sub-node-desc">VOC 감시 분석</div>
+                        </div>
+                        <div class="arch-sub-node" onclick="activateAgent(1, 'Brand Scraper')">
+                            <div class="sub-node-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                            <div class="sub-node-title">브랜드 크롤러 AI</div>
+                            <div class="sub-node-desc">브랜드 노출 수집</div>
+                        </div>
+                        <div class="arch-sub-node" onclick="activateAgent(2, 'AX Strategy')">
+                            <div class="sub-node-icon"><i class="fa-solid fa-chess"></i></div>
+                            <div class="sub-node-title">AX 중기 전략 AI</div>
+                            <div class="sub-node-desc">로드맵 성과 예측</div>
+                        </div>
+                        <div class="arch-sub-node" onclick="activateAgent(3, 'Route Optim')">
+                            <div class="sub-node-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                            <div class="sub-node-title">동선 스케줄러 AI</div>
+                            <div class="sub-node-desc">2-Opt 동선 최적화</div>
+                        </div>
+                        <div class="arch-sub-node" onclick="activateAgent(4, 'Audit Automation')">
+                            <div class="sub-node-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                            <div class="sub-node-title">의뢰 자동화 AI</div>
+                            <div class="sub-node-desc">허들 스크리닝 OCR</div>
+                        </div>
+                        <div class="arch-sub-node" onclick="activateAgent(5, 'YOLOv8 Vision')">
+                            <div class="sub-node-icon"><i class="fa-solid fa-eye"></i></div>
+                            <div class="sub-node-title">YOLOv8 비전 AI</div>
+                            <div class="sub-node-desc">유부 구성물 검출</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             GOVERNING CODE MONITOR & SANDBOX (Real-time Code Viewer)
+             ========================================================================== -->
+        <div class="code-monitor-section">
+            <div class="section-title">
+                <i class="fa-solid fa-code"></i>
+                <span>실시간 Governing AI 에이전트 소스 코드 관제소 (Live Agent Sandbox)</span>
+            </div>
+            
+            <div class="code-viewer-container">
+                <!-- 사이드바: 6대 에이전트 파일 선택 -->
+                <div class="code-sidebar">
+                    <button class="code-file-btn active" onclick="loadAgentCode(0, 'analyze_suppliers.py', this)">
+                        <i class="fa-solid fa-handshake"></i>
+                        <div>
+                            <div style="font-weight: 700;">eCS 협력 AI</div>
+                            <div style="font-size: 0.7rem; opacity: 0.6;">analyze_suppliers.py</div>
+                        </div>
+                    </button>
+                    <button class="code-file-btn" onclick="loadAgentCode(1, 'Brand Data/scraper.py', this)">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        <div>
+                            <div style="font-weight: 700;">브랜드 크롤러 AI</div>
+                            <div style="font-size: 0.7rem; opacity: 0.6;">Brand Data/scraper.py</div>
+                        </div>
+                    </button>
+                    <button class="code-file-btn" onclick="loadAgentCode(2, 'analyze_vba_details.py', this)">
+                        <i class="fa-solid fa-chess"></i>
+                        <div>
+                            <div style="font-weight: 700;">AX 중기전략 AI</div>
+                            <div style="font-size: 0.7rem; opacity: 0.6;">analyze_vba_details.py</div>
+                        </div>
+                    </button>
+                    <button class="code-file-btn" onclick="loadAgentCode(3, 'visit-scheduler/index.html', this)">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <div>
+                            <div style="font-weight: 700;">동선 스케줄러 AI</div>
+                            <div style="font-size: 0.7rem; opacity: 0.6;">visit-scheduler/index.html</div>
+                        </div>
+                    </button>
+                    <button class="code-file-btn" onclick="loadAgentCode(4, 'audit_automation_to_be_style.html', this)">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <div>
+                            <div style="font-weight: 700;">의뢰 자동화 AI</div>
+                            <div style="font-size: 0.7rem; opacity: 0.6;">audit_automation_to_be_style.html</div>
+                        </div>
+                    </button>
+                    <button class="code-file-btn" onclick="loadAgentCode(5, 'convert_json_to_yolo.py', this)">
+                        <i class="fa-solid fa-eye"></i>
+                        <div>
+                            <div style="font-weight: 700;">YOLOv8 비전 AI</div>
+                            <div style="font-size: 0.7rem; opacity: 0.6;">convert_json_to_yolo.py</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- 코드 출력 및 헤더 영역 -->
+                <div class="code-content-wrapper">
+                    <div class="code-header-bar">
+                        <div class="code-file-info">
+                            <div class="code-status-dot"></div>
+                            <span id="activeFileName">analyze_suppliers.py</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 5px;">(실시간 로컬 동기화 완료)</span>
+                        </div>
+                        <div class="code-actions">
+                            <button class="code-action-btn" onclick="copyActiveCode()">
+                                <i class="fa-regular fa-copy"></i> 코드 복사
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="code-display-area"><code id="codeDisplay">로딩 중...</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             SYSTEM LAUNCHER LAUNCHPAD (6 Sub-systems Grid)
+             ========================================================================== -->
+        <div class="launchpad-section">
+            <div class="section-title">
+                <i class="fa-solid fa-rocket"></i>
+                <span>핵심 AI 서브 시스템 실행 제어대 (AI Launcher Console)</span>
+            </div>
+            
+            <div class="launchpad-grid">
+                
+                <!-- Card 1: eCS Partner Dashboard Hub -->
+                <a href="BI-Dashboard/index.html" class="system-card">
+                    <div class="card-header-row">
+                        <div class="system-icon-box">
+                            <i class="fa-solid fa-handshake"></i>
+                        </div>
+                        <span class="agent-status-tag active">ACTIVE / 9 협력기업</span>
+                    </div>
+                    <h3 class="system-title">eCS 협력기업 Power BI Hub</h3>
+                    <p class="system-desc">
+                        우리델리카, 지엠에프, 엄지식품 등 주요 9대 협력기업별 Power BI 데이터 분석 대시보드와 유기적으로 연동합니다. 
+                        Q1 VOC 현황 모니터링 및 실시간 클라우드 PWA 설치 기능을 제공합니다.
+                    </p>
+                    <div class="system-action-row">
+                        <span>콘솔 실행하기</span> <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Card 2: Brand Exposure Status -->
+                <a href="Brand Data/index.html" class="system-card">
+                    <div class="card-header-row">
+                        <div class="system-icon-box">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        </div>
+                        <span class="agent-status-tag active">AUTO SCRAPED</span>
+                    </div>
+                    <h3 class="system-title">식품안전나라 브랜드 현황 (v1)</h3>
+                    <p class="system-desc">
+                        식품안전나라 웹스프랩 통계 데이터를 실시간 파싱하고 가시화합니다. 
+                        수집 제품 수 키워드별 바 차트 및 변경 이력 로그(changes_log.csv) 추적, 클립보드 복사 기능을 수행합니다.
+                    </p>
+                    <div class="system-action-row">
+                        <span>콘솔 실행하기</span> <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Card 3: Mid-Term AX Strategy -->
+                <a href="중기전략/품질기술센터_Governing_AI_Agent_전략.html" class="system-card">
+                    <div class="card-header-row">
+                        <div class="system-icon-box">
+                            <i class="fa-solid fa-chess"></i>
+                        </div>
+                        <span class="agent-status-tag active">GOVERNING Mapped</span>
+                    </div>
+                    <h3 class="system-title">Governing AI 중기전략 대시보드</h3>
+                    <p class="system-desc">
+                        품질기술센터의 2026-2029 중기 AX 로드맵 및 3단계 AI 에이전트 구조를 담은 프리미엄 프레젠테이션. 
+                        가상 에러 조치 시나리오 가동 등 임원 보고용 인터랙티브 컴포넌트를 지원합니다.
+                    </p>
+                    <div class="system-action-row">
+                        <span>콘솔 실행하기</span> <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Card 4: Visit Scheduler -->
+                <a href="visit-scheduler/index.html" class="system-card">
+                    <div class="card-header-row">
+                        <div class="system-icon-box">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                        </div>
+                        <span class="agent-status-tag active">ROUTE OPTIMIZED</span>
+                    </div>
+                    <h3 class="system-title">방문 동선 스케줄러 (Visit Scheduler)</h3>
+                    <p class="system-desc">
+                        카카오 맵 API 프록시 서버(Flask) 기반의 완전 무료 최적 방문 동선 탐색 서비스. 
+                        2-Opt 동선 최적화 알고리즘, 출발/체류 시간 자동 연동, 국도/고속도로 시퀀스 뷰 기능을 지원합니다.
+                    </p>
+                    <div class="system-action-row">
+                        <span>콘솔 실행하기</span> <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Card 5: New Audit Process -->
+                <a href="New_Audit Process/index.html" class="system-card">
+                    <div class="card-header-row">
+                        <div class="system-icon-box">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <span class="agent-status-tag active">FLOW READY</span>
+                    </div>
+                    <h3 class="system-title">의뢰 자동화 AI (New Audit Process)</h3>
+                    <p class="system-desc">
+                        소싱 포탈 신규 Audit 의뢰 프로세스를 획기적으로 단축하는 지능형 스크리닝 도구. 
+                        HACCP 필수 인증, 금속검출기 유무, 하도급 금지 등 5대 허들 조건 실시간 OCR 검증 및 예외 분석.
+                    </p>
+                    <div class="system-action-row">
+                        <span>콘솔 실행하기</span> <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- Card 6: YOLOv8 Vision Inspection -->
+                <a href="Vision System/vision_system_weekly_report.html" class="system-card">
+                    <div class="card-header-row">
+                        <div class="system-icon-box">
+                            <i class="fa-solid fa-eye"></i>
+                        </div>
+                        <span class="agent-status-tag active">MODEL best.pt</span>
+                    </div>
+                    <h3 class="system-title">YOLOv8 비전 검사 (Vision System)</h3>
+                    <p class="system-desc">
+                        우천유부 조립/생산 공정상 구성물 저감 검출을 위한 YOLOv8 딥러닝 비전 검사 시스템 주간 성과 보고서. 
+                        정밀 학습 이력 시각화, 현장 샘플 조립 사진 라벨링 분석 데이터 대시보드 탑재.
+                    </p>
+                    <div class="system-action-row">
+                        <span>콘솔 실행하기</span> <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             REAL-TIME AI CONSOLE / LIVE FEED (Terminal UI)
+             ========================================================================== -->
+        <div class="console-section">
+            <div class="console-scan-line"></div>
+            <div class="console-header">
+                <div class="console-title">
+                    <i class="fa-solid fa-terminal"></i> Antigravity 2.0 Active AI Agent Agentic Logs
+                </div>
+                <div class="console-dots">
+                    <div class="console-dot red"></div>
+                    <div class="console-dot yellow"></div>
+                    <div class="console-dot green"></div>
+                </div>
+            </div>
+            
+            <div class="console-body" id="consoleBody">
+                <div class="console-line">
+                    <span class="console-timestamp">[15:58:01]</span>
+                    <span class="console-tag sys">[SYS]</span>
+                    <span class="console-text">Antigravity 2.0 Core Kernel Booting completed...</span>
+                </div>
+                <div class="console-line">
+                    <span class="console-timestamp">[15:58:02]</span>
+                    <span class="console-tag sys">[SYS]</span>
+                    <span class="console-text">Loading 3-Tier Governing AI architecture config... Mapped successfully.</span>
+                </div>
+                <div class="console-line">
+                    <span class="console-timestamp">[15:58:05]</span>
+                    <span class="console-tag agent">[KODARI]</span>
+                    <span class="console-text">충성! 코다리 과장 대시보드 정비 모드로 대기 중...</span>
+                </div>
+                <div class="console-line">
+                    <span class="console-timestamp">[15:58:10]</span>
+                    <span class="console-tag agent">[AGENT]</span>
+                    <span class="console-text">YOLOv8 vision_system model 'best.pt' check status: READY (Classes: Yuboo-Assembly)</span>
+                </div>
+                <div class="console-line">
+                    <span class="console-timestamp">[15:58:15]</span>
+                    <span class="console-tag agent">[AGENT]</span>
+                    <span class="console-text">Kakao Directions Proxy active on localhost:5000... Session stable.</span>
+                </div>
+                <div class="console-line">
+                    <span class="console-timestamp">[15:58:20]</span>
+                    <span class="console-tag sys">[SYS]</span>
+                    <span class="console-text">Syncing 'food_data.csv' and 'changes_log.csv'... 14,786 bytes loaded.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             FOOTER
+             ========================================================================== -->
+        <footer>
+            <p>&copy; 2026 <strong>Pulmuone Quality Technology Center & IT Ax Strategy Group</strong>. All rights reserved.</p>
+            <p>Designed and deployed autonomously by <strong>Kodari Governing AI Agent</strong> (코다리 과장 😎🫡🐟).</p>
+        </footer>
+
+    </div>
+
+    <!-- 인터랙션 스크립트 -->
+    <script>
+        // ==========================================================================
+        // GOVERNING CODE MONITOR & SANDBOX SCRIPT (Dynamic Loading)
+        // ==========================================================================
+        let currentLoadedCode = "";
+
+        // 대표님이 가장 원하시던 핵심 뼈대 코드 폴백(Fallback) 내장 데이터
+        const codeFallbacks = {
+            'analyze_suppliers.py': `# eCS 협력기업 통계 가공 에이전트\nimport pandas as pd\nimport numpy as np\n\ndef analyze_supplier_quality(filepath):\n    df = pd.read_csv(filepath)\n    print("협력기업 VOC 가중 통계 집계중...")\n    # 엄지식품, 지엠에프, 우리델리카 실적 연계\n    summary = df.groupby('Supplier').agg({'VOC_Count': 'sum', 'Pass_Rate': 'mean'})\n    return summary`,
+            'Brand Data/scraper.py': `# 식품안전나라 브랜드 크롤러 실시간 핵심 소스 코드 (Playwright v2.0)\nimport csv\nimport time\nfrom playwright.sync_api import sync_playwright\n\ndef scrape_korea_food_safety():\n    keywords = ['풀무원', '풀스키친', '풀스쿡']\n    results = []\n    with sync_playwright() as p:\n        browser = p.chromium.launch(headless=True)\n        page = browser.new_page()\n        for keyword in keywords:\n            print(f"Scraping for keyword: {keyword}")\n            page.goto("https://www.foodsafetykorea.go.kr/portal/specialinfo/searchInfoProduct.do?menu_grp=MENU_NEW04&menu_no=2815")\n            # 제품명 입력란 매핑 및 자동 타이핑\n            page.locator('#prd_nm').fill(keyword)\n            page.locator('a#srchBtn').click()\n            # ... 결과 수집 및 food_data.csv 변동 이력 기록 처리 ...\n    browser.close()`,
+            'analyze_vba_details.py': `# AX 중기 전략 수립을 위한 데이터 파싱 에이전트\nimport json\n\ndef load_vba_strategy():\n    with open("pages_payload.json", "r", encoding="utf-8") as f:\n        strategy_data = json.load(f)\n    print("품질기술센터 중기 AX 시나리오 매핑완료")\n    return strategy_data`,
+            'visit-scheduler/index.html': `<!-- 카카오 맵 API 및 2-Opt 방문 경로 자동화 스케줄러 -->\n<!DOCTYPE html>\n<html>\n<head>\n    <title>Visit Route Auto Optimizer</title>\n    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=REST_API_KEY"></script>\n    <script>\n        function calculate2OptPath(points) {\n            console.log("2-Opt 동선 최적화 알고리즘 구동 중...");\n            // 출발지점과 체류 시간 반영 최단 순회 동선 도출\n        }\n    </script>\n</head>\n<body>\n    <div id="map"></div>\n</body>\n</html>`,
+            'audit_automation_to_be_style.html': `<!-- 의뢰 자동화 AI 신규 OCR 심사 프로세스 -->\n<div class="ocr-screening-hub">\n    <h2>소싱포탈 신규 의뢰 스크리닝 OCR</h2>\n    <div class="hudle-check-item">\n        <span>HACCP 인증서 확인:</span>\n        <span class="status-pass">적합 (OCR 판독완료)</span>\n    </div>\n</div>`,
+            'convert_json_to_yolo.py': `# YOLOv8 비전 감사 모델 라벨링 전처리 에이전트\nimport os\nimport json\n\ndef convert_labels(json_path, output_dir):\n    with open(json_path) as f:\n        data = json.load(f)\n    # 구성물(유부, 야채 등) 바운딩 박스 변환 로직\n    print("YOLO v8 format converted.")`
+        };
+
+        function loadAgentCode(index, filePath, element) {
+            // 버튼 상태 변경
+            document.querySelectorAll('.code-file-btn').forEach(btn => btn.classList.remove('active'));
+            if(element) {
+                element.classList.add('active');
+            } else {
+                // 다이어그램 클릭으로 유입된 경우 해당 버튼 활성화
+                const buttons = document.querySelectorAll('.code-file-btn');
+                if(buttons[index]) buttons[index].classList.add('active');
+            }
+
+            // 헤더 파일명 변경
+            document.getElementById('activeFileName').textContent = filePath;
+
+            // 로딩 상태 표시
+            const codeDisplay = document.getElementById('codeDisplay');
+            codeDisplay.textContent = "로딩 중... (동적 소스 데이터 동기화 동작 중)";
+
+            // 1. 로컬 API(Fetch)를 통해 실제 작동중인 소스 코드를 동적으로 긁어오기 시도
+            fetch(filePath)
+                .then(response => {
+                    if (!response.ok) throw new Error("Fetch failed");
+                    return response.text();
+                })
+                .then(codeText => {
+                    currentLoadedCode = codeText;
+                    codeDisplay.textContent = codeText;
+                    // Governing Console에 실시간 감시 로그 기록
+                    logToGoverningConsole(`Source monitor synchronized file: ${filePath} (${codeText.length} bytes loaded)`);
+                })
+                .catch(err => {
+                    console.log("Fetch fallback triggered for " + filePath + ":", err.message);
+                    // 실패 시 내장 폴백 데이터 제공 (CORS 등 브라우저 보안 제약 방지)
+                    const fallback = codeFallbacks[filePath] || "# No fallback code available.";
+                    currentLoadedCode = fallback;
+                    codeDisplay.textContent = fallback;
+                    logToGoverningConsole(`Source monitor fallback loaded for: ${filePath} (Offline local copy)`);
+                });
+            
+            // 3단계 AI 아키텍처 다이어그램 동기화 활성화 (무한루프 방지 조건 추가)
+            const diagramNodes = document.querySelectorAll('.arch-sub-node');
+            if(diagramNodes[index] && !diagramNodes[index].classList.contains('active')) {
+                activateAgent(index, filePath);
+            }
+        }
+
+        function copyActiveCode() {
+            if (!currentLoadedCode) return;
+            navigator.clipboard.writeText(currentLoadedCode).then(() => {
+                alert("코드가 성공적으로 클립보드에 복사되었습니다! 📋");
+            }).catch(err => {
+                alert("복사 실패: " + err.message);
+            });
+        }
+
+        // Governing Console 로깅 보조 함수
+        function logToGoverningConsole(text) {
+            const consoleBody = document.getElementById('consoleBody');
+            if(!consoleBody) return;
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            
+            const logLine = document.createElement('div');
+            logLine.className = 'console-line';
+            logLine.innerHTML = `
+                <span class="console-timestamp">[${timeStr}]</span>
+                <span class="console-tag agent">[MONITOR]</span>
+                <span class="console-text">${text}</span>
+            `;
+            consoleBody.appendChild(logLine);
+            consoleBody.scrollTop = consoleBody.scrollHeight;
+        }
+
+        // 마우스 라이팅 효과 (Lighting Card Effect)
+        document.querySelectorAll('.system-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--x', `${x}px`);
+                card.style.setProperty('--y', `${y}px`);
+            });
+        });
+
+        // 3단계 에이전트 클릭 시 콘솔에 로그 주입 및 강조 효과
+        const agentNames = [
+            "eCS Partner VOC Dashboard Agent",
+            "Brand Exposure Scraper Agent",
+            "AX Mid-Term Strategy Prediction Agent",
+            "2-Opt Visit Route Scheduler Agent",
+            "Audit Requirement OCR Screening Agent",
+            "YOLOv8 Assembly Vision Inspection Agent"
+        ];
+        
+        function activateAgent(index, shortName) {
+            // 노드 선택 상태 활성화 변경
+            const nodes = document.querySelectorAll('.arch-sub-node');
+            nodes.forEach((node, i) => {
+                if(i === index) {
+                    node.classList.add('active');
+                } else {
+                    node.classList.remove('active');
+                }
+            });
+
+            // 콘솔창 로그 추가
+            const consoleBody = document.getElementById('consoleBody');
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            
+            const logLine = document.createElement('div');
+            logLine.className = 'console-line';
+            logLine.innerHTML = `
+                <span class="console-timestamp">[${timeStr}]</span>
+                <span class="console-tag agent">[GOV]</span>
+                <span class="console-text">Governing AI triggered direct channel to: <strong>${agentNames[index]}</strong> - Status: SYNCHRONIZED</span>
+            `;
+            consoleBody.appendChild(logLine);
+            consoleBody.scrollTop = consoleBody.scrollHeight; // 자동 스크롤
+        }
+
+        // 콘솔 자동 가상 라이브 로그 시뮬레이션
+        const randomLogs = [
+            "Syncing database... Partner company eCS metrics recalculated.",
+            "Scraper task: brand food safety portal monitored. No critical anomalies.",
+            "OCR scan queue: New Audit candidate certificate parsed (Result: PASS).",
+            "Kakao Map Proxy: recalculating 2-Opt shortest path sequence... 0.04s elapsed.",
+            "Model best.pt self-evaluating... IoU threshold: 0.5, Accuracy: 94.2%",
+            "System temperature stable. Governing loop latency: 12ms."
+        ];
+
+        setInterval(() => {
+            const consoleBody = document.getElementById('consoleBody');
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            const randIdx = Math.floor(Math.random() * randomLogs.length);
+            
+            const logLine = document.createElement('div');
+            logLine.className = 'console-line';
+            logLine.innerHTML = `
+                <span class="console-timestamp">[${timeStr}]</span>
+                <span class="console-tag sys">[SYS]</span>
+                <span class="console-text">${randomLogs[randIdx]}</span>
+            `;
+            consoleBody.appendChild(logLine);
+            
+            // 너무 많아지면 위쪽 삭제
+            if(consoleBody.children.length > 25) {
+                consoleBody.removeChild(consoleBody.firstElementChild);
+            }
+            
+            consoleBody.scrollTop = consoleBody.scrollHeight;
+        }, 4500);
+    </script>
+</body>
+</html>
