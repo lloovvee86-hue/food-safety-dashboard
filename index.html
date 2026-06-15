@@ -3,12 +3,633 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=Brand%20Data/index.html">
-    <title>풀무원 식품안전 대시보드</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>식품안전나라 제품명 브랜드 노출 현황</title>
+    <!-- Modern Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            /* Slate 900 */
+            --card-bg: rgba(30, 41, 59, 0.7);
+            /* Slate 800 with opacity for glassmorphism */
+            --text-main: #f8fafc;
+            /* Slate 50 */
+            --text-muted: #94a3b8;
+            /* Slate 400 */
+            --accent: #3b82f6;
+            /* Blue 500 */
+            --accent-hover: #60a5fa;
+            /* Blue 400 */
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            height: 400px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            line-height: 1.5;
+            white-space: nowrap;
+            /* Default no wrap */
+        }
+
+        th {
+            background-color: #1e293b;
+            /* Solid color for sticky to obscure scrolling text */
+            color: var(--accent-hover);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+            box-sizing: border-box;
+        }
+
+        .loader.error-text {
+            border: none;
+            width: auto;
+            height: auto;
+            animation: none;
+            color: #ef4444;
+            font-size: 1.1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar customization */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8));
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .copy-btn:hover {
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.9), rgba(16, 185, 129, 0.9));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+    </style>
 </head>
 
 <body>
-    <p>대시보드로 이동 중... <a href="Brand%20Data/index.html">여기를 클릭하세요</a></p>
+    <div class="container">
+        <header>
+            <h1>식품안전나라 제품명 브랜드 노출 현황</h1>
+            <p class="subtitle">웹 스크래핑을 통한 브랜드별 제품 수집 현황 통계</p>
+        </header>
+
+        <div id="loading" class="loader"></div>
+
+        <div id="dashboard-content" style="display: none;">
+            <!-- Chart Section -->
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">검색어별 수집 통계</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span id="totalCountBadge"
+                            style="font-size: 0.95rem; font-weight: 600; color: #60a5fa; background: rgba(59, 130, 246, 0.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3);">Total:
+                            0건</span>
+                        <span id="searchDatePrefix"
+                            style="font-size: 0.95rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">기준일:
+                            로딩중</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="keywordChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">상세 수집 데이터 목록</h2>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <input type="text" id="searchInput" placeholder="🏢 업체명 검색..."
+                            style="padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width: 220px; font-size: 0.95rem; outline: none;">
+                        <button id="copyExcelBtn" class="copy-btn"
+                            style="border:none; cursor:pointer; font-family:inherit;">
+                            현재 데이터 복사 📋
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="dataTable">
+                        <thead>
+                            <tr id="tableHeader"></tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 변동 이력 Section -->
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">📋 변동 이력</h2>
+                    <span id="changeCountBadge"
+                        style="font-size: 0.95rem; font-weight: 600; color: #f59e0b; background: rgba(245, 158, 11, 0.15); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                        로딩중
+                    </span>
+                </div>
+                <div id="changeLogEmpty"
+                    style="display: none; text-align: center; color: var(--text-muted); padding: 30px;">
+                    아직 변동 이력이 없습니다. 스크래퍼가 다음에 실행되면 자동으로 기록됩니다.
+                </div>
+                <div class="table-responsive" id="changeLogTableWrap" style="display: none;">
+                    <table id="changeLogTable">
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th>변동유형</th>
+                                <th>검색어</th>
+                                <th>품목보고번호</th>
+                                <th>업체명</th>
+                                <th style="white-space:normal; word-break:keep-all; min-width:120px;">제품명</th>
+                                <th>품목유형</th>
+                            </tr>
+                        </thead>
+                        <tbody id="changeLogBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const loading = document.getElementById('loading');
+            const dashboardContent = document.getElementById('dashboard-content');
+
+            // Calculate today's date and time in KST
+            const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+            kstDate.setDate(kstDate.getDate() - 1); // Get previous day
+            const yyyy = kstDate.getFullYear();
+            const mm = String(kstDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(kstDate.getDate()).padStart(2, '0');
+            document.getElementById('searchDatePrefix').textContent = `최근업데이트: ${yyyy}-${mm}-${dd}`;
+
+            fetch(`Brand%20Data/food_data.csv?t=${new Date().getTime()}`)
+                .then(response => response.text())
+                .then(csvText => {
+
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function (results) {
+                            const data = results.data;
+                            if (data.length === 0) {
+                                loading.innerHTML = "데이터가 없습니다.";
+                                return;
+                            }
+
+                            // Update total count badge
+                            const totalBadge = document.getElementById("totalCountBadge");
+                            if (totalBadge) {
+                                totalBadge.textContent = "Total: " + data.length + "건";
+                            }
+
+                            let filteredData = [...data];
+
+                            // Attach event listener for the Search Input
+                            const searchInput = document.getElementById("searchInput");
+                            if (searchInput) {
+                                searchInput.addEventListener("input", function () {
+                                    const searchTerm = this.value.toLowerCase().trim();
+                                    const rows = document.querySelectorAll("#tableBody tr");
+                                    const headers = Object.keys(data[0]);
+                                    const companyColIndex = headers.indexOf("업체명");
+
+                                    filteredData = data.filter(row => {
+                                        if (row["업체명"]) {
+                                            return row["업체명"].toLowerCase().includes(searchTerm);
+                                        }
+                                        return false;
+                                    });
+
+                                    rows.forEach(row => {
+                                        if (companyColIndex !== -1) {
+                                            const companyCell = row.cells[companyColIndex];
+                                            if (companyCell) {
+                                                const companyName = companyCell.textContent.toLowerCase();
+                                                if (companyName.includes(searchTerm)) {
+                                                    row.style.display = ""; // Show
+                                                } else {
+                                                    row.style.display = "none"; // Hide
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            // Attach event listener for the Copy button
+                            const copyBtn = document.getElementById("copyExcelBtn");
+                            if (copyBtn) {
+                                copyBtn.addEventListener("click", () => {
+                                    copyBtn.textContent = "복사 중... ⏳";
+                                    // Use unparse with tab delimiter to make it Excel-compatible using only filtered data
+                                    const tsvText = Papa.unparse(filteredData, { delimiter: "\t" });
+
+                                    // Write directly to clipboard
+                                    navigator.clipboard.writeText(tsvText).then(() => {
+                                        copyBtn.textContent = "복사 완료! ✅";
+                                        alert("검색된 " + filteredData.length + "개의 데이터가 복사되었습니다!\n빈 엑셀 문서 화면을 열고 [붙여넣기(Ctrl+V)] 하시면 완벽하게 들어갑니다.");
+                                        setTimeout(() => { copyBtn.textContent = "현재 데이터 복사 📋"; }, 3000);
+                                    }).catch(err => {
+                                        console.error("복사실패", err);
+                                        copyBtn.textContent = "복사 실패 ❌";
+                                        alert("복사에 실패했습니다. 브라우저 설정을 확인하거나 수동으로 복사해주세요.");
+                                        setTimeout(() => { copyBtn.textContent = "현재 데이터 복사 📋"; }, 3000);
+                                    });
+                                });
+                            }
+
+                            // Render Table
+                            const headers = Object.keys(data[0]);
+                            const thead = document.getElementById("tableHeader");
+                            headers.forEach(header => {
+                                let th = document.createElement("th");
+                                th.textContent = header;
+                                // Make sure specific columns can wrap to save space
+                                if (header === '제품명' || header === '업체명' || header === '소비기한' || header === '품목유형') {
+                                    th.style.whiteSpace = 'normal';
+                                    th.style.wordBreak = 'keep-all';
+                                }
+                                if (header === '제품명') {
+                                    th.style.minWidth = '120px';
+                                    th.style.maxWidth = '250px';
+                                }
+                                thead.appendChild(th);
+                            });
+
+                            const tbody = document.getElementById("tableBody");
+                            data.forEach((row, index) => {
+                                let tr = document.createElement("tr");
+                                // Add a slight stagger animation to rows (capped to first 50 to avoid performance issues)
+                                if (index < 50) {
+                                    tr.style.animation = `fadeInUp 0.3s ease-out forwards ${index * 0.02}s`;
+                                    tr.style.opacity = '0'; // hide initially for animation
+                                } else {
+                                    tr.style.opacity = '1';
+                                }
+
+                                headers.forEach(header => {
+                                    let td = document.createElement("td");
+                                    td.textContent = row[header] || '-';
+                                    // Apply specific wrapping rules for data cells
+                                    if (header === '제품명' || header === '업체명' || header === '소비기한' || header === '품목유형') {
+                                        td.style.whiteSpace = 'normal';
+                                        td.style.wordBreak = 'keep-all';
+                                    }
+                                    tr.appendChild(td);
+                                });
+                                tbody.appendChild(tr);
+                            });
+
+                            // Prepare Chart Data
+                            const keywordCounts = {};
+                            data.forEach(item => {
+                                const keyword = item["검색어"];
+                                if (keyword) {
+                                    keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+                                }
+                            });
+
+                            const chartLabels = Object.keys(keywordCounts);
+                            const chartData = Object.values(keywordCounts);
+
+                            // Gradient setup for chart
+                            const ctx = document.getElementById('keywordChart').getContext('2d');
+
+                            // Create gradients for bars
+                            const gradients = [];
+                            const colors = [
+                                ['rgba(96, 165, 250, 0.8)', 'rgba(59, 130, 246, 0.8)'], // Blue
+                                ['rgba(167, 139, 250, 0.8)', 'rgba(139, 92, 246, 0.8)'], // Purple
+                                ['rgba(52, 211, 153, 0.8)', 'rgba(16, 185, 129, 0.8)'],  // Green
+                                ['rgba(251, 146, 60, 0.8)', 'rgba(234, 88, 12, 0.8)']    // Orange
+                            ];
+
+                            chartLabels.forEach((label, i) => {
+                                let pair = colors[i % colors.length];
+                                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                                gradient.addColorStop(0, pair[0]);
+                                gradient.addColorStop(1, pair[1]);
+                                gradients.push(gradient);
+                            });
+
+                            Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+                            Chart.defaults.font.family = "'Inter', sans-serif";
+
+                            Chart.register(ChartDataLabels);
+
+                            new Chart(ctx, {
+                                type: 'bar',
+                                plugins: [ChartDataLabels],
+                                data: {
+                                    labels: chartLabels,
+                                    datasets: [{
+                                        label: '수집 제품 수',
+                                        data: chartData,
+                                        backgroundColor: gradients,
+                                        borderRadius: 8,
+                                        borderWidth: 0,
+                                        barPercentage: 0.6
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        datalabels: {
+                                            color: '#ffffff',
+                                            anchor: 'end',
+                                            align: 'bottom',
+                                            offset: 8,
+                                            font: {
+                                                weight: 'bold',
+                                                size: 16,
+                                                family: "'Inter', sans-serif"
+                                            },
+                                            formatter: (value) => value + '건',
+                                            textShadowBlur: 4,
+                                            textShadowColor: 'rgba(0, 0, 0, 0.5)'
+                                        },
+                                        legend: { display: false },
+                                        tooltip: {
+                                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                            titleFont: { size: 14, family: "'Inter', sans-serif" },
+                                            bodyFont: { size: 14, family: "'Inter', sans-serif" },
+                                            padding: 12,
+                                            cornerRadius: 8,
+                                            displayColors: false
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            grid: {
+                                                color: 'rgba(255, 255, 255, 0.1)',
+                                                borderDash: [5, 5]
+                                            },
+                                            border: { display: false },
+                                            // Make room for labels
+                                            suggestedMax: Math.max(...chartData) * 1.15
+                                        },
+                                        x: {
+                                            grid: { display: false },
+                                            border: { display: false }
+                                        }
+                                    },
+                                    animation: {
+                                        duration: 1500,
+                                        easing: 'easeOutQuart'
+                                    }
+                                }
+                            });
+
+                            // Hide Loader & Show Content
+                            loading.style.display = 'none';
+                            dashboardContent.style.display = 'block';
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error("Error loading CSV:", err);
+                    loading.classList.add("error-text");
+                    loading.innerHTML = "데이터를 불러오는 중 오류가 발생했습니다.";
+                });
+
+            // 변동 이력 (changes_log.csv) 로드
+            fetch(`Brand%20Data/changes_log.csv?t=${new Date().getTime()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("changes_log.csv not found");
+                    return response.text();
+                })
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function (results) {
+                            const badge = document.getElementById("changeCountBadge");
+                            const emptyMsg = document.getElementById("changeLogEmpty");
+                            const tableWrap = document.getElementById("changeLogTableWrap");
+                            const tbody = document.getElementById("changeLogBody");
+
+                            if (results.data.length === 0) {
+                                badge.textContent = "0건";
+                                emptyMsg.style.display = "block";
+                                return;
+                            }
+
+                            badge.textContent = `총 ${results.data.length}건`;
+                            tableWrap.style.display = "block";
+
+                            // 최신순 정렬
+                            const sorted = results.data.reverse();
+
+                            sorted.forEach((row, index) => {
+                                let tr = document.createElement("tr");
+                                const isAdd = row["변동유형"] === "추가";
+                                tr.style.borderLeft = isAdd ? "3px solid #10b981" : "3px solid #ef4444";
+                                tr.style.backgroundColor = isAdd ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)";
+
+                                if (index < 30) {
+                                    tr.style.animation = `fadeInUp 0.3s ease-out forwards ${index * 0.02}s`;
+                                    tr.style.opacity = '0';
+                                }
+
+                                const headers = ["날짜", "변동유형", "검색어", "품목보고번호", "업체명", "제품명", "품목유형"];
+                                headers.forEach(h => {
+                                    let td = document.createElement("td");
+                                    if (h === "변동유형") {
+                                        td.textContent = isAdd ? "✅ 추가" : "❌ 삭제";
+                                        td.style.fontWeight = "600";
+                                        td.style.color = isAdd ? "#10b981" : "#ef4444";
+                                    } else {
+                                        td.textContent = row[h] || '-';
+                                    }
+                                    if (h === "제품명") {
+                                        td.style.whiteSpace = "normal";
+                                        td.style.wordBreak = "keep-all";
+                                    }
+                                    tr.appendChild(td);
+                                });
+                                tbody.appendChild(tr);
+                            });
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.log("변동 이력 없음 (정상):", err.message);
+                    const badge = document.getElementById("changeCountBadge");
+                    const emptyMsg = document.getElementById("changeLogEmpty");
+                    if (badge) badge.textContent = "0건";
+                    if (emptyMsg) emptyMsg.style.display = "block";
+                });
+        });
+    </script>
 </body>
 
 </html>
