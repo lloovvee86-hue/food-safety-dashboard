@@ -144,6 +144,18 @@
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 40px auto;
+            box-sizing: border-box;
+        }
+
+        .loader.error-text {
+            border: none;
+            width: auto;
+            height: auto;
+            animation: none;
+            color: #ef4444;
+            font-size: 1.1rem;
+            text-align: center;
+            font-weight: 500;
         }
 
         @keyframes spin {
@@ -545,6 +557,7 @@
                 })
                 .catch(err => {
                     console.error("Error loading CSV:", err);
+                    loading.classList.add("error-text");
                     loading.innerHTML = "데이터를 불러오는 중 오류가 발생했습니다.";
                 });
 
